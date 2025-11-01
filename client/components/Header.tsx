@@ -2,7 +2,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Leaf, LogOut, User, Package, ShoppingCart, MessageSquare } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+<<<<<<< HEAD
 import { LanguageSwitcher } from "./LanguageSwitcher";
+=======
+>>>>>>> main
 import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
@@ -26,7 +29,11 @@ export function Header() {
             <div className="flex items-center justify-center w-8 h-8 bg-ag-green-600 rounded-lg">
               <Leaf className="w-5 h-5 text-white" />
             </div>
+<<<<<<< HEAD
             <span className="text-ag-green-600">তাজা হাট</span>
+=======
+            <span className="text-ag-green-600">Taja Haat</span>
+>>>>>>> main
           </Link>
 
           {/* Navigation */}
@@ -57,12 +64,23 @@ export function Header() {
             </Link>
           </nav>
 
+<<<<<<< HEAD
           {/* Auth Buttons and Language Switcher */}
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             {user && userData ? (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
+=======
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-3">
+            {user && userData ? (
+              <div className="flex items-center gap-3">
+                <Link 
+                  to="/profile" 
+                  className="flex items-center gap-2 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors"
+                >
+>>>>>>> main
                   <User className="w-4 h-4" />
                   <span className="text-sm font-medium">
                     {userData.name}
@@ -70,7 +88,11 @@ export function Header() {
                   <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
                     {userData.role}
                   </span>
+<<<<<<< HEAD
                 </div>
+=======
+                </Link>
+>>>>>>> main
                 <Button 
                   variant="ghost" 
                   size="sm" 

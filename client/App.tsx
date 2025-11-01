@@ -8,23 +8,51 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { AuthProvider } from "@/contexts/AuthContext";
+<<<<<<< HEAD
+=======
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+>>>>>>> main
 import Home from "./pages/Home";
 import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
+<<<<<<< HEAD
 import Dashboard from "./pages/Dashboard";
+=======
+>>>>>>> main
 import Bids from "./pages/Bids";
 import Forecast from "./pages/Forecast";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+<<<<<<< HEAD
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+=======
+import Profile from "./pages/Profile";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
+
+const queryClient = new QueryClient();
+
+// Debug environment variables in development
+if (import.meta.env.DEV) {
+  console.log('Environment check:', {
+    hasFirebaseApiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
+    hasFirebaseAuthDomain: !!import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    hasFirebaseProjectId: !!import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    mode: import.meta.env.MODE
+  });
+}
+
+>>>>>>> main
 const Layout = ({ children }: { children: React.ReactNode }) => (
   <div className="flex flex-col min-h-screen">
     <Header />
@@ -33,12 +61,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => (
 );
 
 const App = () => (
+<<<<<<< HEAD
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
+=======
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+>>>>>>> main
         <Routes>
           <Route
             path="/"
@@ -121,6 +159,17 @@ const App = () => (
             element={<Register />}
           />
           <Route
+<<<<<<< HEAD
+=======
+            path="/profile"
+            element={
+              <Layout>
+                <Profile />
+              </Layout>
+            }
+          />
+          <Route
+>>>>>>> main
             path="/about"
             element={
               <Layout>
@@ -149,6 +198,10 @@ const App = () => (
     </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
+<<<<<<< HEAD
+=======
+  </ErrorBoundary>
+>>>>>>> main
 );
 
 createRoot(document.getElementById("root")!).render(<App />);

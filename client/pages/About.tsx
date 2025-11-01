@@ -1,33 +1,3 @@
-// import { Footer } from "@/components/Footer";
-// import { useTranslation } from "@/lib/i18n";
-
-// export default function About() {
-//   const { t } = useTranslation();
-
-//   return (
-//     <div className="min-h-screen bg-white">
-//       <section className="py-12 px-4 sm:px-6 lg:px-8 bg-ag-green-50 border-b border-border">
-//         <div className="max-w-7xl mx-auto">
-//           <h1 className="text-4xl font-bold text-foreground mb-2">{t('about.title')}</h1>
-//           <p className="text-muted-foreground">{t('about.subtitle')}</p>
-//         </div>
-//       </section>
-
-//       <section className="py-16 px-4 sm:px-6 lg:px-8">
-//         <div className="max-w-4xl mx-auto">
-//           <div className="prose prose-lg text-muted-foreground space-y-6">
-//             <p>
-//               {t('about.content')}
-//             </p>
-//           </div>
-//         </div>
-//       </section>
-
-//       <Footer />
-//     </div>
-//   );
-// }
-// -----
 import { Footer } from "@/components/Footer";
 import { useTranslation } from "@/lib/i18n";
 
@@ -49,7 +19,6 @@ export default function About() {
       {/* Main Content Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          {/* About Overview */}
           <div className="prose prose-lg text-muted-foreground space-y-6 mb-12">
             <p>
               {t("about.content") ||
@@ -93,13 +62,12 @@ export default function About() {
               technology.
             </p>
 
-            {/* Updated Team Section */}
             <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
               <div>
                 <h3 className="text-xl font-semibold text-foreground">
                   Shahariar Rijon
                 </h3>
-                <p className="text-muted-foreground">Data annalyst</p>
+                <p className="text-muted-foreground">Data Analyst</p>
               </div>
 
               <div>
@@ -113,7 +81,7 @@ export default function About() {
                 <h3 className="text-xl font-semibold text-foreground">
                   Mainur Rahat
                 </h3>
-                <p className="text-muted-foreground">Agricalture Annalyst</p>
+                <p className="text-muted-foreground">Agriculture Analyst</p>
               </div>
             </div>
           </div>

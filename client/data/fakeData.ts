@@ -76,7 +76,11 @@ export const users: UserProfile[] = [
   {
     id: "f1",
     name: "Rajesh Kumar",
+<<<<<<< HEAD
     email: "rajesh@তাজা হাট.com",
+=======
+    email: "rajesh@Tajahaat.com",
+>>>>>>> main
     phone: "+91 98765 43210",
     location: "Punjab",
     type: "farmer",
@@ -91,7 +95,11 @@ export const users: UserProfile[] = [
   {
     id: "f2",
     name: "Priya Sharma",
+<<<<<<< HEAD
     email: "priya@তাজা হাট.com",
+=======
+    email: "priya@Tajahaat.com",
+>>>>>>> main
     phone: "+91 98765 43211",
     location: "Haryana",
     type: "farmer",
@@ -106,7 +114,11 @@ export const users: UserProfile[] = [
   {
     id: "f3",
     name: "Amit Singh",
+<<<<<<< HEAD
     email: "amit@তাজা হাট.com",
+=======
+    email: "amit@Tajahaat.com",
+>>>>>>> main
     phone: "+91 98765 43212",
     location: "Madhya Pradesh",
     type: "farmer",
@@ -121,7 +133,11 @@ export const users: UserProfile[] = [
   {
     id: "f4",
     name: "Deepak Patel",
+<<<<<<< HEAD
     email: "deepak@তাজা হাট.com",
+=======
+    email: "deepak@Tajahaat.com",
+>>>>>>> main
     phone: "+91 98765 43213",
     location: "Maharashtra",
     type: "farmer",
@@ -136,7 +152,11 @@ export const users: UserProfile[] = [
   {
     id: "f5",
     name: "Suresh Verma",
+<<<<<<< HEAD
     email: "suresh@তাজা হাট.com",
+=======
+    email: "suresh@Tajahaat.com",
+>>>>>>> main
     phone: "+91 98765 43214",
     location: "Uttar Pradesh",
     type: "farmer",
@@ -151,7 +171,11 @@ export const users: UserProfile[] = [
   {
     id: "f6",
     name: "Neha Gupta",
+<<<<<<< HEAD
     email: "neha@তাজা হাট.com",
+=======
+    email: "neha@Tajahaat.com",
+>>>>>>> main
     phone: "+91 98765 43215",
     location: "Karnataka",
     type: "farmer",
@@ -166,7 +190,11 @@ export const users: UserProfile[] = [
   {
     id: "f7",
     name: "Vikram Singh",
+<<<<<<< HEAD
     email: "vikram@তাজা হাট.com",
+=======
+    email: "vikram@Tajahaat.com",
+>>>>>>> main
     phone: "+91 98765 43216",
     location: "Himachal Pradesh",
     type: "farmer",
@@ -181,7 +209,11 @@ export const users: UserProfile[] = [
   {
     id: "f8",
     name: "Meera Desai",
+<<<<<<< HEAD
     email: "meera@তাজা হাট.com",
+=======
+    email: "meera@Tajahaat.com",
+>>>>>>> main
     phone: "+91 98765 43217",
     location: "West Bengal",
     type: "farmer",
