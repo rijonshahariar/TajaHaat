@@ -16,7 +16,7 @@ export function Header() {
             <div className="flex items-center justify-center w-8 h-8 bg-ag-green-600 rounded-lg">
               <Leaf className="w-5 h-5 text-white" />
             </div>
-            <span className="text-ag-green-600">AgroHub</span>
+            <span className="text-ag-green-600">TajaHaat</span>
           </Link>
 
           {/* Navigation */}
