@@ -10,7 +10,7 @@ export interface BackendUser {
   level: number;
   rating: number;
   image: string;
-  role: 'farmer' | 'buyer';
+  role: 'farmer' | 'buyer' | 'admin';
 }
 
 export interface CreateUserRequest {
@@ -18,7 +18,7 @@ export interface CreateUserRequest {
   address: string;
   phoneNumber: string;
   email: string; // Required string (phone@gmail.com format)
-  role: 'farmer' | 'buyer';
+  role: 'farmer' | 'buyer' | 'admin';
   image?: File;
 }
 
@@ -194,22 +194,69 @@ class ApiService {
 
   async updateUser(userId: string, updates: Partial<BackendUser>): Promise<BackendUser> {
     try {
+      console.log('Updating user:', userId, updates);
+      
+      // First, get the current user data
+      const currentUser = await this.getUserById(userId);
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
+      // Merge the updates with current user data to ensure all required fields are present
+      const updatedUserData = {
+        fullName: updates.fullName || currentUser.fullName,
+        address: updates.address || currentUser.address,
+        phoneNumber: updates.phoneNumber || currentUser.phoneNumber,
+        email: updates.email || currentUser.email,
+        role: updates.role || currentUser.role,
+        subscriptionStatus: updates.subscriptionStatus || currentUser.subscriptionStatus,
+        level: updates.level !== undefined ? updates.level : currentUser.level,
+        rating: updates.rating !== undefined ? updates.rating : currentUser.rating,
+        image: updates.image || currentUser.image,
+      };
+
+      console.log('Updating user with complete data:', updatedUserData);
+      
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(updatedUserData),
       });
 
+      console.log('Update user response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to update user');
+        const errorText = await response.text();
+        console.error('Update user error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const updatedUser = await response.json();
+      console.log('User updated successfully:', updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error('Update user error:', error);
+      throw error;
+    }
+  }
+
+  async getUserById(userId: string): Promise<BackendUser | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error('Failed to fetch user');
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Update user error:', error);
-      throw error;
+      console.error('Get user by ID error:', error);
+      return null;
     }
   }
 
@@ -225,6 +272,21 @@ class ApiService {
     } catch (error) {
       console.error('Get all users error:', error);
       return [];
+    }
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Delete user error:', error);
+      throw error;
     }
   }
 }

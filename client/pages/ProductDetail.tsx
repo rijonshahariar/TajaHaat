@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Footer } from "@/components/Footer";
 import { Star, MapPin, Phone, Shield, Badge, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 const getLevelBadge = (level: string) => {
@@ -118,6 +119,7 @@ export default function ProductDetail() {
       orderDate: new Date().toISOString(),
     };
 
+<<<<<<< HEAD
     try {
       const response = await axios.post(
         "https://taja-haat-backend.vercel.app/orders",
@@ -133,6 +135,44 @@ export default function ProductDetail() {
     }
   };
 
+=======
+  const orderData = {
+    productId: product._id,
+    productName: product.itemName,
+    quantity: quantity,
+    price: product.price,
+    sellerNumber: product.sellerNumber,
+    sellerName: product.sellerName,
+    buyerNumber: userData?.phone || "01898765432",
+    
+    status: "pending",
+    orderDate: new Date().toISOString(),
+  };
+
+  try {
+    setLoadingOrder(true);
+    const response = await axios.post(
+      "https://taja-haat-backend.vercel.app/orders",
+      orderData
+    );
+    console.log("Order placed:", response.data);
+    setOrderPlaced(true);
+
+    // Redirect to buyer dashboard after 2 seconds
+    setTimeout(() => {
+      navigate("/buyer-dashboard");
+    }, 2000);
+  } catch (err) {
+    console.error("Failed to place order:", err);
+    // Optionally, show an error toast/message to the user
+  } finally {
+    setLoadingOrder(false);
+  }
+};
+
+
+
+>>>>>>> 65a0939538a3a8d8d89f7ad4a5d8b86574a38bd4
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -267,7 +307,7 @@ export default function ProductDetail() {
                     ৳{product.price}
                   </div>
                   <div className="text-sm text-muted-foreground mt-2">
-                    {product.available} kg available
+                    {product.stock} kg available
                   </div>
                 </div>
 

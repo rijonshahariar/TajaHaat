@@ -34,7 +34,7 @@ interface UserData {
   name: string;
   phone: string;
   password: string;
-  role: 'farmer' | 'buyer';
+  role: 'farmer' | 'buyer' | 'admin';
   isPhoneVerified: boolean;
   createdAt: string;
   backendUser?: BackendUser;

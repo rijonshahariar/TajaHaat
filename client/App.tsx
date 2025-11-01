@@ -14,6 +14,7 @@ import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Bids from "./pages/Bids";
 import Forecast from "./pages/Forecast";
 import DeliveryTracking from "./pages/DeliveryTracking";
@@ -98,6 +99,14 @@ const App = () => (
             element={
               <Layout>
                 <FarmerDashboard />
+              </Layout>
+            }
+          />
+          <Route
+            path="/admin-dashboard"
+            element={
+              <Layout>
+                <AdminDashboard />
               </Layout>
             }
           />

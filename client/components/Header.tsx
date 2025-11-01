@@ -45,6 +45,12 @@ export function Header() {
                 {t('nav.bids')}
               </Link>
             )}
+            {/* {userData?.role === 'admin' && (
+              <Link to="/admin-dashboard" className="text-foreground hover:text-primary font-medium transition-colors flex items-center gap-1">
+                <Package className="w-4 h-4" />
+                Admin Panel
+              </Link>
+            )} */}
             <Link to="/forecast" className="text-foreground hover:text-primary font-medium transition-colors">
               {t('nav.forecast')}
             </Link>

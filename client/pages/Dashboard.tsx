@@ -21,6 +21,8 @@ export default function Dashboard() {
         navigate('/farmer-dashboard');
       } else if (userData.role === 'buyer') {
         navigate('/buyer-dashboard');
+      } else if (userData.role === 'admin') {
+        navigate('/admin-dashboard');
       } else {
         // Default to buyer dashboard for unknown roles
         navigate('/buyer-dashboard');
