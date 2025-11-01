@@ -76,7 +76,7 @@ export const users: UserProfile[] = [
   {
     id: "f1",
     name: "Rajesh Kumar",
-    email: "rajesh@agrohub.com",
+    email: "rajesh@তাজা হাট.com",
     phone: "+91 98765 43210",
     location: "Punjab",
     type: "farmer",
@@ -91,7 +91,7 @@ export const users: UserProfile[] = [
   {
     id: "f2",
     name: "Priya Sharma",
-    email: "priya@agrohub.com",
+    email: "priya@তাজা হাট.com",
     phone: "+91 98765 43211",
     location: "Haryana",
     type: "farmer",
@@ -106,7 +106,7 @@ export const users: UserProfile[] = [
   {
     id: "f3",
     name: "Amit Singh",
-    email: "amit@agrohub.com",
+    email: "amit@তাজা হাট.com",
     phone: "+91 98765 43212",
     location: "Madhya Pradesh",
     type: "farmer",
@@ -121,7 +121,7 @@ export const users: UserProfile[] = [
   {
     id: "f4",
     name: "Deepak Patel",
-    email: "deepak@agrohub.com",
+    email: "deepak@তাজা হাট.com",
     phone: "+91 98765 43213",
     location: "Maharashtra",
     type: "farmer",
@@ -136,7 +136,7 @@ export const users: UserProfile[] = [
   {
     id: "f5",
     name: "Suresh Verma",
-    email: "suresh@agrohub.com",
+    email: "suresh@তাজা হাট.com",
     phone: "+91 98765 43214",
     location: "Uttar Pradesh",
     type: "farmer",
@@ -151,7 +151,7 @@ export const users: UserProfile[] = [
   {
     id: "f6",
     name: "Neha Gupta",
-    email: "neha@agrohub.com",
+    email: "neha@তাজা হাট.com",
     phone: "+91 98765 43215",
     location: "Karnataka",
     type: "farmer",
@@ -166,7 +166,7 @@ export const users: UserProfile[] = [
   {
     id: "f7",
     name: "Vikram Singh",
-    email: "vikram@agrohub.com",
+    email: "vikram@তাজা হাট.com",
     phone: "+91 98765 43216",
     location: "Himachal Pradesh",
     type: "farmer",
@@ -181,7 +181,7 @@ export const users: UserProfile[] = [
   {
     id: "f8",
     name: "Meera Desai",
-    email: "meera@agrohub.com",
+    email: "meera@তাজা হাট.com",
     phone: "+91 98765 43217",
     location: "West Bengal",
     type: "farmer",

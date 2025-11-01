@@ -88,7 +88,7 @@ export default function Home() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-ag-green-200 to-ag-green-100 rounded-3xl opacity-50 blur-3xl"></div>
                 <img
-                  src="https://images.unsplash.com/photo-1625246333195-78d9c38ad576?w=500&h=500&fit=crop"
+                  src="https://www.researchgate.net/publication/354492168/figure/fig5/AS:1066309089492994@1631239306961/Bangladeshi-farmer-Md-Khalilur-Rahman-with-a-fresh-harvest-of-Bt-brinjal-in-Hijulii-of.ppm"
                   alt="Smart Agriculture"
                   className="relative rounded-3xl shadow-xl w-full h-auto"
                 />
@@ -103,7 +103,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-2">Trusted by Farmers & Buyers</h2>
-            <p className="text-muted-foreground">Join thousands of verified sellers and buyers on AgroHub</p>
+            <p className="text-muted-foreground">Join thousands of verified sellers and buyers on তাজা হাট</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">

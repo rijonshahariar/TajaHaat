@@ -1,18 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Leaf } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { useTranslation } from "@/lib/i18n";
+import { useAuth } from "@/hooks/useAuth";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 export default function Login() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+  const { user, userData, loading, error, login, resetState } = useAuth();
+  
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user && userData) {
+      navigate('/');
+    }
+  }, [user, userData, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!phoneNumber || phoneNumber.length !== 11 || !password || password.length < 6) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await login(phoneNumber, password);
+    } catch (error) {
+      console.error('Login failed:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -24,7 +49,7 @@ export default function Login() {
             <div className="flex items-center justify-center w-10 h-10 bg-ag-green-600 rounded-lg">
               <Leaf className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-ag-green-600">AgroHub</span>
+            <span className="text-2xl font-bold text-ag-green-600">তাজা হাট</span>
           </Link>
 
           {/* Form */}
@@ -32,28 +57,38 @@ export default function Login() {
             <h1 className="text-3xl font-bold text-foreground mb-2">{t('auth.welcome_back')}</h1>
             <p className="text-muted-foreground mb-8">{t('auth.sign_in_subtitle')}</p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">{t('auth.email')}</label>
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full"
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('auth.phone_number')}
+                </label>
+                <PhoneInput
+                  value={phoneNumber}
+                  onChange={setPhoneNumber}
+                  placeholder={t('auth.phone_placeholder')}
+                  disabled={isSubmitting || loading}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">{t('auth.password')}</label>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Password (পাসওয়ার্ড)
+                </label>
                 <Input
                   type="password"
-                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  disabled={isSubmitting || loading}
                   className="w-full"
                 />
               </div>
+
+              {error && (
+                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                  {error}
+                </div>
+              )}
 
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -65,8 +100,12 @@ export default function Login() {
                 </a>
               </div>
 
-              <Button className="w-full bg-ag-green-600 hover:bg-ag-green-700 h-10" type="submit">
-                {t('btn.sign_in')}
+              <Button 
+                className="w-full bg-ag-green-600 hover:bg-ag-green-700 h-10" 
+                type="submit"
+                disabled={isSubmitting || loading || phoneNumber.length < 10 || password.length < 6}
+              >
+                {isSubmitting || loading ? t('common.loading') : t('btn.sign_in')}
               </Button>
             </form>
 
@@ -79,10 +118,6 @@ export default function Login() {
               </p>
             </div>
           </div>
-
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            {t('auth.demo_note')}
-          </p>
         </div>
       </div>
 

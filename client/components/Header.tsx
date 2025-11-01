@@ -1,11 +1,21 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Leaf } from "lucide-react";
+import { Leaf, LogOut, User, Package, ShoppingCart, MessageSquare } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
   const { t } = useTranslation();
+  const { user, userData, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <header className="border-b border-border bg-white sticky top-0 z-50 shadow-sm">
@@ -16,7 +26,7 @@ export function Header() {
             <div className="flex items-center justify-center w-8 h-8 bg-ag-green-600 rounded-lg">
               <Leaf className="w-5 h-5 text-white" />
             </div>
-            <span className="text-ag-green-600">AgroHub</span>
+            <span className="text-ag-green-600">তাজা হাট</span>
           </Link>
 
           {/* Navigation */}
@@ -30,6 +40,12 @@ export function Header() {
             <Link to="/dashboard" className="text-foreground hover:text-primary font-medium transition-colors">
               {t('nav.dashboard')}
             </Link>
+            {userData?.role === 'farmer' && (
+              <Link to="/bids" className="text-foreground hover:text-primary font-medium transition-colors flex items-center gap-1">
+                <MessageSquare className="w-4 h-4" />
+                {t('nav.bids')}
+              </Link>
+            )}
             <Link to="/forecast" className="text-foreground hover:text-primary font-medium transition-colors">
               {t('nav.forecast')}
             </Link>
@@ -44,12 +60,37 @@ export function Header() {
           {/* Auth Buttons and Language Switcher */}
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/login">{t('nav.login')}</Link>
-            </Button>
-            <Button variant="default" size="sm" asChild>
-              <Link to="/register">{t('nav.register')}</Link>
-            </Button>
+            {user && userData ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {userData.name}
+                  </span>
+                  <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                    {userData.role}
+                  </span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {t('btn.logout')}
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/login">{t('nav.login')}</Link>
+                </Button>
+                <Button variant="default" size="sm" asChild>
+                  <Link to="/register">{t('nav.register')}</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

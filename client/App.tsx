@@ -7,11 +7,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Home from "./pages/Home";
 import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
+import Dashboard from "./pages/Dashboard";
+import Bids from "./pages/Bids";
 import Forecast from "./pages/Forecast";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import Login from "./pages/Login";
@@ -31,10 +34,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
         <Routes>
           <Route
             path="/"
@@ -64,7 +68,7 @@ const App = () => (
             path="/dashboard"
             element={
               <Layout>
-                <BuyerDashboard />
+                <Dashboard />
               </Layout>
             }
           />
@@ -81,6 +85,14 @@ const App = () => (
             element={
               <Layout>
                 <FarmerDashboard />
+              </Layout>
+            }
+          />
+          <Route
+            path="/bids"
+            element={
+              <Layout>
+                <Bids />
               </Layout>
             }
           />
@@ -135,6 +147,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

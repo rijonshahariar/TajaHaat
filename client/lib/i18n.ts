@@ -11,6 +11,7 @@ export const translations = {
     'nav.contact': 'Contact',
     'nav.login': 'Login',
     'nav.register': 'Register',
+    'nav.bids': 'Bids',
 
     // Common Actions
     'btn.explore_marketplace': 'Explore Marketplace',
@@ -21,6 +22,7 @@ export const translations = {
     'btn.create_account': 'Create Account',
     'btn.place_order': 'Place Order',
     'btn.go_back': 'Go Back',
+    'btn.logout': 'Logout',
 
     // Home Page
     'home.hero.badge': 'Smart Agriculture Platform',
@@ -56,12 +58,22 @@ export const translations = {
 
     // Authentication
     'auth.welcome_back': 'Welcome Back',
-    'auth.sign_in_subtitle': 'Enter your credentials to access your account',
+    'auth.sign_in_subtitle': 'Enter your phone number to access your account',
     'auth.create_account': 'Create Account',
-    'auth.join_agrohub': 'Join AgroHub and start trading',
+    'auth.join_তাজা হাট': 'Join তাজা হাট and start trading',
     'auth.full_name': 'Full Name',
     'auth.email': 'Email',
     'auth.password': 'Password',
+    'auth.phone_number': 'Phone Number',
+    'auth.enter_phone': 'Enter your phone number',
+    'auth.phone_placeholder': '+880 1XXX XXXXXX',
+    'auth.otp_code': 'OTP Code',
+    'auth.enter_otp': 'Enter the 6-digit code',
+    'auth.otp_placeholder': '123456',
+    'auth.send_otp': 'Send OTP',
+    'auth.verify_otp': 'Verify OTP',
+    'auth.resend_otp': 'Resend OTP',
+    'auth.otp_sent': 'OTP sent to your phone',
     'auth.forgot_password': 'Forgot password?',
     'auth.dont_have_account': "Don't have an account?",
     'auth.already_have_account': 'Already have an account?',
@@ -99,7 +111,7 @@ export const translations = {
     'forecast.expand_note': 'Continue prompting to expand this dashboard with full chart functionality.',
 
     // About Page
-    'about.title': 'About AgroHub',
+    'about.title': 'About তাজা হাট',
     'about.subtitle': 'Learn about our mission to revolutionize agriculture',
     'about.content': "This page can be further developed with more content about the platform's mission, team, and values. Continue prompting to expand this section with detailed information.",
 
@@ -137,7 +149,7 @@ export const translations = {
 
     // Call to Action
     'cta.title': 'Ready to Join the Agricultural Revolution?',
-    'cta.subtitle': 'Whether you\'re a farmer or buyer, AgroHub provides the tools you need to succeed',
+    'cta.subtitle': 'Whether you\'re a farmer or buyer, তাজা হাট provides the tools you need to succeed',
   },
   bn: {
     // Header Navigation
@@ -149,6 +161,7 @@ export const translations = {
     'nav.contact': 'যোগাযোগ',
     'nav.login': 'লগইন',
     'nav.register': 'নিবন্ধন',
+    'nav.bids': 'বিড',
 
     // Common Actions
     'btn.explore_marketplace': 'বাজার অন্বেষণ করুন',
@@ -159,6 +172,7 @@ export const translations = {
     'btn.create_account': 'অ্যাকাউন্ট তৈরি করুন',
     'btn.place_order': 'অর্ডার দিন',
     'btn.go_back': 'ফিরে যান',
+    'btn.logout': 'লগআউট',
 
     // Home Page
     'home.hero.badge': 'স্মার্ট কৃষি প্ল্যাটফর্ম',
@@ -194,13 +208,27 @@ export const translations = {
 
     // Authentication
     'auth.welcome_back': 'ফিরে আসুন',
-    'auth.sign_in_subtitle': 'আপনার অ্যাকাউন্ট অ্যাক্সেস করতে আপনার পরিচয়পত্র লিখুন',
+    'auth.sign_in_subtitle': 'আপনার ফোন নম্বর এবং পিন দিয়ে লগইন করুন',
     'auth.create_account': 'অ্যাকাউন্ট তৈরি করুন',
-    'auth.join_agrohub': 'AgroHub-এ যোগদান করুন এবং ব্যবসা শুরু করুন',
+    'auth.join_তাজা হাট': 'তাজা হাট-এ যোগদান করুন এবং ব্যবসা শুরু করুন',
     'auth.full_name': 'পূর্ণ নাম',
     'auth.email': 'ইমেইল',
     'auth.password': 'পাসওয়ার্ড',
-    'auth.forgot_password': 'পাসওয়ার্ড ভুলে গেছেন?',
+    'auth.phone_number': 'ফোন নম্বর',
+    'auth.pin': 'পিন (৪-৬ ডিজিট)',
+    'auth.confirm_pin': 'পিন নিশ্চিত করুন',
+    'auth.enter_phone': 'আপনার ফোন নম্বর দিন',
+    'auth.phone_placeholder': '+৮৮০ ১XXX XXXXXX',
+    'auth.pin_placeholder': '৪-৬ ডিজিট পিন দিন',
+    'auth.otp_code': 'OTP কোড',
+    'auth.enter_otp': 'আপনার ফোনে পাঠানো ৬ ডিজিট কোড দিন',
+    'auth.otp_placeholder': '123456',
+    'auth.send_otp': 'OTP পাঠান',
+    'auth.verify_otp': 'OTP যাচাই করুন',
+    'auth.verify_and_register': 'যাচাই করুন ও নিবন্ধন করুন',
+    'auth.resend_otp': 'পুনরায় OTP পাঠান',
+    'auth.otp_sent': 'আপনার ফোনে OTP পাঠানো হয়েছে',
+    'auth.forgot_password': 'পিন ভুলে গেছেন?',
     'auth.dont_have_account': 'কোনো অ্যাকাউন্ট নেই?',
     'auth.already_have_account': 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
     'auth.sign_up': 'সাইন আপ',
@@ -237,7 +265,7 @@ export const translations = {
     'forecast.expand_note': 'সম্পূর্ণ চার্ট কার্যকারিতা সহ এই ড্যাশবোর্ড সম্প্রসারণের জন্য অনুরোধ করুন।',
 
     // About Page
-    'about.title': 'AgroHub সম্পর্কে',
+    'about.title': 'তাজা হাট সম্পর্কে',
     'about.subtitle': 'কৃষিতে বিপ্লব আনার আমাদের মিশন সম্পর্কে জানুন',
     'about.content': 'এই পেজটি প্ল্যাটফর্মের মিশন, দল এবং মূল্যবোধ সম্পর্কে আরও বিষয়বস্তু দিয়ে আরও উন্নত করা যেতে পারে। বিস্তারিত তথ্য সহ এই বিভাগ সম্প্রসারণের জন্য অনুরোধ করুন।',
 
@@ -275,7 +303,7 @@ export const translations = {
 
     // Call to Action
     'cta.title': 'কৃষি বিপ্লবে যোগ দিতে প্রস্তুত?',
-    'cta.subtitle': 'আপনি কৃষক হোন বা ক্রেতা, AgroHub আপনার সফলতার জন্য প্রয়োজনীয় সরঞ্জাম প্রদান করে',
+    'cta.subtitle': 'আপনি কৃষক হোন বা ক্রেতা, তাজা হাট আপনার সফলতার জন্য প্রয়োজনীয় সরঞ্জাম প্রদান করে',
   }
 };
 
