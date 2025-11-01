@@ -64,7 +64,12 @@ export default function Profile() {
   };
 
   const getRoleBadgeColor = (role: string) => {
-    return role === 'farmer' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
+    switch (role) {
+      case 'farmer': return 'bg-green-100 text-green-800';
+      case 'buyer': return 'bg-blue-100 text-blue-800';
+      case 'admin': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -113,7 +118,9 @@ export default function Profile() {
                 </h2>
                 
                 <Badge className={`mb-4 ${getRoleBadgeColor(userData.role)}`}>
-                  {userData.role === 'farmer' ? '🌾 Farmer' : '🛒 Buyer'}
+                  {userData.role === 'farmer' ? '🌾 Farmer' : 
+                   userData.role === 'buyer' ? '🛒 Buyer' : 
+                   userData.role === 'admin' ? '👑 Admin' : '👤 User'}
                 </Badge>
 
                 {userData.backendUser && (
