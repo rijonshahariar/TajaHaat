@@ -13,15 +13,16 @@ import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
-import Dashboard from "./pages/Dashboard";
 import Bids from "./pages/Bids";
 import Forecast from "./pages/Forecast";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +120,14 @@ const App = () => (
           <Route
             path="/register"
             element={<Register />}
+          />
+          <Route
+            path="/profile"
+            element={
+              <Layout>
+                <Profile />
+              </Layout>
+            }
           />
           <Route
             path="/about"

@@ -112,7 +112,7 @@ class ApiService {
         address: userData.address,
         phoneNumber: userData.phoneNumber,
         email: userData.email, // This will be phone@gmail.com format
-        subscriptionStatus: 'ফ্রি', // Free in Bengali
+        subscriptionStatus: 'Free', // Free subscription
         level: 0,
         rating: 0,
         image: imageUrl,

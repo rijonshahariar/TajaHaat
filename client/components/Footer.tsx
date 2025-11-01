@@ -16,7 +16,7 @@ export function Footer() {
               <div className="flex items-center justify-center w-8 h-8 bg-ag-green-600 rounded-lg">
                 <Leaf className="w-5 h-5 text-white" />
               </div>
-              <span className="text-ag-green-600">তাজা হাট</span>
+              <span className="text-ag-green-600">Taja Haat</span>
             </div>
             <p className="text-muted-foreground text-sm">
               {t('footer.brand_tagline')}
@@ -93,8 +93,8 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                <a href="mailto:info@তাজা হাট.com" className="text-muted-foreground hover:text-primary transition-colors">
-                  info@তাজা হাট.com
+                <a href="mailto:info@Tajahaat.com" className="text-muted-foreground hover:text-primary transition-colors">
+                  info@Tajahaat.com
                 </a>
               </li>
             </ul>
@@ -105,7 +105,7 @@ export function Footer() {
         <div className="border-t border-border pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} তাজা হাট. {t('footer.all_rights_reserved')}
+              © {currentYear} Taja Haat. {t('footer.all_rights_reserved')}
             </p>
             <div className="flex gap-6 mt-4 md:mt-0">
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
