@@ -90,7 +90,7 @@ export default function Register() {
             {!isOtpSent ? (
               <>
                 <h1 className="text-3xl font-bold text-foreground mb-2">{t('auth.create_account')}</h1>
-                <p className="text-muted-foreground mb-8">{t('auth.join_তাজা হাট')}</p>
+                <p className="text-muted-foreground mb-8">Join Taza Haat and start trading</p>
 
                 <form onSubmit={handleStartRegistration} className="space-y-4">
                   <div>
@@ -119,7 +119,7 @@ export default function Register() {
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Password (পাসওয়ার্ড)
+                      {t('auth.password')}
                     </label>
                     <Input
                       type="password"
@@ -133,7 +133,7 @@ export default function Register() {
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Address (ঠিকানা) <span className="text-red-500">*</span>
+                      Address <span className="text-red-500">*</span>
                     </label>
                     <Input
                       type="text"
@@ -148,7 +148,7 @@ export default function Register() {
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Profile Picture (প্রোফাইল ছবি - ঐচ্ছিক)
+                      Profile Picture (Optional)
                     </label>
                     <Input
                       type="file"

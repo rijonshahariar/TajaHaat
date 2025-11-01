@@ -42,7 +42,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
         <div className="w-full max-w-md">
           {/* Logo */}
           <Link to="/" className="flex items-center justify-center gap-2 mb-8">
@@ -65,14 +65,14 @@ export default function Login() {
                 <PhoneInput
                   value={phoneNumber}
                   onChange={setPhoneNumber}
-                  placeholder={t('auth.phone_placeholder')}
+                  placeholder={'01XXXXXXXXX'}
                   disabled={isSubmitting || loading}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Password (পাসওয়ার্ড)
+                  {t('auth.password')}
                 </label>
                 <Input
                   type="password"

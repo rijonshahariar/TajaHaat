@@ -65,7 +65,7 @@ export const translations = {
   'auth.password': 'Password',
   'auth.phone_number': 'Phone Number',
   'auth.enter_phone': 'Enter your phone number',
-  'auth.phone_placeholder': '+880 1XXX XXXXXX',
+  'auth.phone_placeholder': '01XXX XXXXXX',
   'auth.otp_code': 'OTP Code',
   'auth.enter_otp': 'Enter the 6-digit code',
   'auth.otp_placeholder': '123456',
