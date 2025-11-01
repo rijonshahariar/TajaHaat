@@ -28,20 +28,19 @@ import { Footer } from "@/components/Footer";
 import { useTranslation } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import axios from "axios";
 
 interface Order {
-  id: string;
+  _id: string;
   productId: string;
   productName: string;
-  farmerName: string;
-  farmerPhone: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  status: 'pending' | 'accepted' | 'rejected' | 'in_transit' | 'delivered' | 'cancelled';
+  price: number;
+  sellerNumber: string;
+  sellerName: string;
+  buyerNumber: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'in_transit' | 'delivered' | 'cancelled' | 'shipped';
   orderDate: string;
-  deliveryAddress: string;
-  estimatedDelivery?: string;
 }
 
 interface DemandPost {
@@ -77,25 +76,36 @@ export default function BuyerDashboard() {
     validityDays: '7'
   });
 
-  // Load data from localStorage
+  // Load data from API and localStorage
   useEffect(() => {
-    const savedOrders = localStorage.getItem('buyer_orders');
+    const fetchOrders = async () => {
+      if (!userData?.phone) return;
+      
+      try {
+        const response = await axios.get('https://taja-haat-backend.vercel.app/orders');
+        // Filter orders for current buyer
+        const buyerOrders = response.data.filter((order: Order) => 
+          order.buyerNumber === userData.phone
+        );
+        setOrders(buyerOrders);
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+        // Fallback to localStorage if API fails
+        const savedOrders = localStorage.getItem('buyer_orders');
+        if (savedOrders) {
+          setOrders(JSON.parse(savedOrders));
+        }
+      }
+    };
+
+    fetchOrders();
+    
+    // Load demand posts from localStorage (these are local to the user)
     const savedDemands = localStorage.getItem('buyer_demands');
-    
-    if (savedOrders) {
-      setOrders(JSON.parse(savedOrders));
-    }
-    
     if (savedDemands) {
       setDemandPosts(JSON.parse(savedDemands));
     }
-  }, []);
-
-  // Save orders to localStorage
-  const saveOrders = (updatedOrders: Order[]) => {
-    setOrders(updatedOrders);
-    localStorage.setItem('buyer_orders', JSON.stringify(updatedOrders));
-  };
+  }, [userData]);
 
   // Save demand posts to localStorage
   const saveDemands = (updatedDemands: DemandPost[]) => {
@@ -150,40 +160,110 @@ export default function BuyerDashboard() {
     });
   };
 
-  const handleCancelOrder = (orderId: string) => {
-    const updatedOrders = orders.map(order => 
-      order.id === orderId 
-        ? { ...order, status: 'cancelled' as const }
-        : order
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      // Update order status to cancelled on the backend
+      await axios.put(`https://taja-haat-backend.vercel.app/orders/${orderId}`, {
+        status: 'cancelled'
+      });
+      
+      // Update local state
+      const updatedOrders = orders.map(order => 
+        order._id === orderId 
+          ? { ...order, status: 'cancelled' as const }
+          : order
+      );
+      setOrders(updatedOrders);
+      
+      toast({
+        title: "Success",
+        description: "Order cancelled successfully"
+      });
+    } catch (error) {
+      console.error('Failed to cancel order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel order. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Professional shipping status tracker component
+  const OrderStatusTracker = ({ status }: { status: string }) => {
+    const steps = [
+      { key: 'pending', label: 'Order Placed', icon: <Package className="w-4 h-4" /> },
+      { key: 'accepted', label: 'Confirmed', icon: <CheckCircle className="w-4 h-4" /> },
+      { key: 'in_transit', label: 'In Transit', icon: <Truck className="w-4 h-4" /> },
+      { key: 'delivered', label: 'Delivered', icon: <CheckCircle className="w-4 h-4" /> }
+    ];
+
+    const getStepIndex = (currentStatus: string) => {
+      switch (currentStatus) {
+        case 'pending': return 0;
+        case 'accepted': return 1;
+        case 'in_transit': return 2;
+        case 'shipped': return 2; // Same as in_transit
+        case 'delivered': return 3;
+        case 'rejected': return -1; // Special case
+        case 'cancelled': return -1; // Special case
+        default: return 0;
+      }
+    };
+
+    const currentStepIndex = getStepIndex(status);
+    const isRejectedOrCancelled = status === 'rejected' || status === 'cancelled';
+
+    if (isRejectedOrCancelled) {
+      return (
+        <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
+          <X className="w-5 h-5 text-red-600" />
+          <span className="font-medium text-red-800 capitalize">{status}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between">
+          {steps.map((step, index) => (
+            <div key={step.key} className="flex items-center">
+              {/* Step Circle */}
+              <div className={`
+                flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all
+                ${index <= currentStepIndex 
+                  ? 'bg-green-500 border-green-500 text-white' 
+                  : 'bg-white border-gray-300 text-gray-400'
+                }
+              `}>
+                {index <= currentStepIndex ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  step.icon
+                )}
+              </div>
+              
+              {/* Step Label */}
+              <div className="ml-2 min-w-0">
+                <p className={`text-sm font-medium ${
+                  index <= currentStepIndex ? 'text-green-700' : 'text-gray-500'
+                }`}>
+                  {step.label}
+                </p>
+              </div>
+              
+              {/* Connecting Line */}
+              {index < steps.length - 1 && (
+                <div className={`
+                  flex-1 h-0.5 mx-4 transition-all
+                  ${index < currentStepIndex ? 'bg-green-500' : 'bg-gray-300'}
+                `} />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     );
-    saveOrders(updatedOrders);
-    
-    toast({
-      title: "Success",
-      description: "Order cancelled successfully"
-    });
-  };
-
-  const getOrderStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'accepted': return 'bg-blue-100 text-blue-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'in_transit': return 'bg-purple-100 text-purple-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getOrderStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return <Clock className="w-4 h-4" />;
-      case 'accepted': return <CheckCircle className="w-4 h-4" />;
-      case 'in_transit': return <Truck className="w-4 h-4" />;
-      case 'delivered': return <CheckCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
   };
 
   const getUrgencyColor = (urgency: string) => {
@@ -199,8 +279,8 @@ export default function BuyerDashboard() {
     totalOrders: orders.length,
     pendingOrders: orders.filter(o => o.status === 'pending').length,
     activeDemands: demandPosts.filter(d => d.status === 'active').length,
-    totalSpent: orders.filter(o => o.status === 'delivered')
-      .reduce((sum, o) => sum + o.totalPrice, 0)
+    totalSpent: orders.filter(o => o.status === 'delivered' || o.status === 'shipped')
+      .reduce((sum, o) => sum + (o.quantity * o.price), 0)
   };
   
   return (
@@ -211,9 +291,15 @@ export default function BuyerDashboard() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {t('dashboard.buyer.title')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-2">
             Welcome back, {userData?.name}! {t('dashboard.buyer.subtitle')}
           </p>
+          {userData?.backendUser?.address && (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <MapPin className="w-4 h-4" />
+              <span>Delivery Address: {userData.backendUser.address}</span>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -276,61 +362,66 @@ export default function BuyerDashboard() {
           </TabsList>
 
           {/* Orders Tab */}
-          <TabsContent value="orders" className="space-y-6">
+          <TabsContent value="orders" className="space-y-6 pb-8">
             <h2 className="text-2xl font-bold">My Orders</h2>
             
             <div className="space-y-4">
               {orders.map((order) => (
-                <Card key={order.id}>
+                <Card key={order._id}>
                   <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-bold text-lg">{order.productName}</h3>
-                          <Badge className={getOrderStatusColor(order.status)}>
-                            <div className="flex items-center gap-1">
-                              {getOrderStatusIcon(order.status)}
-                              {order.status}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h3 className="font-bold text-lg">{order.productName}</h3>
+                            <div className="flex items-center gap-2">
+                              <Package className="w-4 h-4 text-gray-500" />
+                              <span>Order ID: {order._id.slice(-8)}</span>
                             </div>
-                          </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-4 h-4 text-gray-500" />
+                              <span>{order.sellerName} - {order.sellerNumber}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Package className="w-4 h-4 text-gray-500" />
+                              <span>{order.quantity} units @ ৳{order.price} each</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="w-4 h-4 text-gray-500" />
+                              <span>Total: ৳{order.quantity * order.price}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-gray-500" />
+                              <span>{new Date(order.orderDate).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-gray-500" />
+                              <span>Delivery: {userData?.backendUser?.address || 'Address not provided'}</span>
+                            </div>
+                            
+                          </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-gray-500" />
-                            <span>{order.farmerName} - {order.farmerPhone}</span>
+                        
+                        {(order.status === 'pending' || order.status === 'accepted') && (
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleCancelOrder(order._id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X className="w-4 h-4 mr-1" />
+                              Cancel Order
+                            </Button>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Package className="w-4 h-4 text-gray-500" />
-                            <span>{order.quantity} units @ ৳{order.unitPrice} each</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4 text-gray-500" />
-                            <span>Total: ৳{order.totalPrice}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-500" />
-                            <span>{new Date(order.orderDate).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center gap-2 md:col-span-2">
-                            <MapPin className="w-4 h-4 text-gray-500" />
-                            <span>{order.deliveryAddress}</span>
-                          </div>
-                        </div>
+                        )}
                       </div>
                       
-                      {(order.status === 'pending' || order.status === 'accepted') && (
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleCancelOrder(order.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <X className="w-4 h-4 mr-1" />
-                            Cancel Order
-                          </Button>
-                        </div>
-                      )}
+                      {/* Professional Status Tracker */}
+                      <OrderStatusTracker status={order.status} />
                     </div>
                   </CardContent>
                 </Card>
@@ -347,7 +438,7 @@ export default function BuyerDashboard() {
           </TabsContent>
 
           {/* Demands Tab */}
-          <TabsContent value="demands" className="space-y-6">
+          <TabsContent value="demands" className="space-y-6 pb-8">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Demand Posts</h2>
               <Dialog open={isCreatingDemand} onOpenChange={setIsCreatingDemand}>
@@ -594,12 +685,300 @@ export default function BuyerDashboard() {
           </TabsContent>
 
           {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <h2 className="text-2xl font-bold">Analytics</h2>
-            <Card className="p-8 text-center">
-              <TrendingUp className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">Analytics Coming Soon</h3>
-              <p className="text-gray-500">Detailed purchase analytics and insights will be available here</p>
+          <TabsContent value="analytics" className="space-y-6 pb-8">
+            <h2 className="text-2xl font-bold">Purchase Analytics</h2>
+            
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Spent</p>
+                      <p className="text-2xl font-bold text-gray-900">৳{stats.totalSpent}</p>
+                      <p className="text-xs text-green-600">+12% from last month</p>
+                    </div>
+                    <DollarSign className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        ৳{orders.length > 0 ? Math.round(stats.totalSpent / orders.length) : 0}
+                      </p>
+                      <p className="text-xs text-blue-600">+5% from last month</p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Success Rate</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {orders.length > 0 ? Math.round(((orders.filter(o => o.status === 'delivered').length) / orders.length) * 100) : 0}%
+                      </p>
+                      <p className="text-xs text-green-600">+8% from last month</p>
+                    </div>
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Favourite Seller</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {(() => {
+                          const sellerCounts = orders.reduce((acc, order) => {
+                            acc[order.sellerName] = (acc[order.sellerName] || 0) + 1;
+                            return acc;
+                          }, {} as Record<string, number>);
+                          const topSeller = Object.entries(sellerCounts).sort(([,a], [,b]) => b - a)[0];
+                          return topSeller ? topSeller[0] : 'None';
+                        })()}
+                      </p>
+                      <p className="text-xs text-purple-600">Most ordered from</p>
+                    </div>
+                    <Phone className="w-8 h-8 text-purple-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Order Status Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    Order Status Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {(() => {
+                      const statusCounts = orders.reduce((acc, order) => {
+                        acc[order.status] = (acc[order.status] || 0) + 1;
+                        return acc;
+                      }, {} as Record<string, number>);
+                      
+                      const statusColors = {
+                        pending: 'bg-yellow-500',
+                        accepted: 'bg-blue-500',
+                        in_transit: 'bg-purple-500',
+                        shipped: 'bg-purple-500',
+                        delivered: 'bg-green-500',
+                        cancelled: 'bg-red-500',
+                        rejected: 'bg-red-500'
+                      };
+
+                      return Object.entries(statusCounts).map(([status, count]) => (
+                        <div key={status} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${statusColors[status as keyof typeof statusColors]}`}></div>
+                            <span className="text-sm font-medium capitalize">{status.replace('_', ' ')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">{count}</span>
+                            <div className="w-20 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${statusColors[status as keyof typeof statusColors]}`}
+                                style={{ width: `${(count / orders.length) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Monthly Spending Trend */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Monthly Spending Trend
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {(() => {
+                      const monthlyData = orders.reduce((acc, order) => {
+                        const month = new Date(order.orderDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                        acc[month] = (acc[month] || 0) + (order.quantity * order.price);
+                        return acc;
+                      }, {} as Record<string, number>);
+
+                      const maxSpending = Math.max(...Object.values(monthlyData));
+                      
+                      return Object.entries(monthlyData).slice(-6).map(([month, amount]) => (
+                        <div key={month} className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{month}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">৳{amount}</span>
+                            <div className="w-20 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="h-2 bg-green-500 rounded-full"
+                                style={{ width: `${(amount / maxSpending) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Top Sellers & Categories */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Top Sellers */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="w-5 h-5" />
+                    Top Sellers
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {(() => {
+                      const sellerStats = orders.reduce((acc, order) => {
+                        const seller = order.sellerName;
+                        if (!acc[seller]) {
+                          acc[seller] = { orders: 0, total: 0, phone: order.sellerNumber };
+                        }
+                        acc[seller].orders += 1;
+                        acc[seller].total += order.quantity * order.price;
+                        return acc;
+                      }, {} as Record<string, { orders: number; total: number; phone: string }>);
+
+                      return Object.entries(sellerStats)
+                        .sort(([,a], [,b]) => b.total - a.total)
+                        .slice(0, 5)
+                        .map(([seller, stats]) => (
+                          <div key={seller} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                              <p className="font-medium">{seller}</p>
+                              <p className="text-sm text-gray-600">{stats.phone}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-green-600">৳{stats.total}</p>
+                              <p className="text-sm text-gray-600">{stats.orders} orders</p>
+                            </div>
+                          </div>
+                        ));
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {orders
+                      .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime())
+                      .slice(0, 5)
+                      .map((order) => (
+                        <div key={order._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">{order.productName}</p>
+                            <p className="text-sm text-gray-600">
+                              {new Date(order.orderDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <Badge 
+                              className={`text-xs ${
+                                order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}
+                            >
+                              {order.status}
+                            </Badge>
+                            <p className="text-sm text-gray-600 mt-1">৳{order.quantity * order.price}</p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Insights & Recommendations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Insights & Recommendations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                      <span className="font-medium text-blue-800">Spending Pattern</span>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      You spend most on {(() => {
+                        const sellerStats = orders.reduce((acc, order) => {
+                          acc[order.sellerName] = (acc[order.sellerName] || 0) + (order.quantity * order.price);
+                          return acc;
+                        }, {} as Record<string, number>);
+                        const topSeller = Object.entries(sellerStats).sort(([,a], [,b]) => b - a)[0];
+                        return topSeller ? topSeller[0] : 'various sellers';
+                      })()} orders. Consider building a long-term relationship for better deals.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-green-800">Success Rate</span>
+                    </div>
+                    <p className="text-sm text-green-700">
+                      {orders.filter(o => o.status === 'delivered').length} out of {orders.length} orders completed successfully. 
+                      Great track record! Keep choosing reliable sellers.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageSquare className="w-4 h-4 text-purple-600" />
+                      <span className="font-medium text-purple-800">Demand Posts</span>
+                    </div>
+                    <p className="text-sm text-purple-700">
+                      You have {demandPosts.filter(d => d.status === 'active').length} active demand posts. 
+                      Post more specific demands to get competitive offers from farmers.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>

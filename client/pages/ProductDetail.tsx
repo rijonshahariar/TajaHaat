@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Footer } from "@/components/Footer";
 import { Star, MapPin, Phone, Shield, Badge, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import axios from "axios";
 const getLevelBadge = (level: string) => {
   const levels = {
@@ -19,6 +20,7 @@ export default function ProductDetail() {
   const { productId } = useParams();
   // console.log(productId);
   const navigate = useNavigate();
+  const { userData } = useAuth();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [product, setProduct] = useState<any>(null);
@@ -107,12 +109,14 @@ const handlePlaceOrder = async () => {
     price: product.price,
     sellerNumber: product.sellerNumber,
     sellerName: product.sellerName,
-    buyerNumber: "01898765432",
+    buyerNumber: userData?.phone || "01898765432",
+    
     status: "pending",
     orderDate: new Date().toISOString(),
   };
 
   try {
+    setLoadingOrder(true);
     const response = await axios.post(
       "https://taja-haat-backend.vercel.app/orders",
       orderData
@@ -120,13 +124,15 @@ const handlePlaceOrder = async () => {
     console.log("Order placed:", response.data);
     setOrderPlaced(true);
 
-    // Redirect to marketplace after 2 seconds
+    // Redirect to buyer dashboard after 2 seconds
     setTimeout(() => {
-      navigate("/marketplace");
+      navigate("/buyer-dashboard");
     }, 2000);
   } catch (err) {
     console.error("Failed to place order:", err);
     // Optionally, show an error toast/message to the user
+  } finally {
+    setLoadingOrder(false);
   }
 };
 
@@ -253,7 +259,7 @@ const handlePlaceOrder = async () => {
                   <div className="text-sm text-muted-foreground mb-1">Price per kg</div>
                   <div className="text-5xl font-bold text-ag-green-600">৳{product.price}</div>
                   <div className="text-sm text-muted-foreground mt-2">
-                    {product.available} kg available
+                    {product.stock} kg available
                   </div>
                 </div>
 
