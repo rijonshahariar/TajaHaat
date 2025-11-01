@@ -6,6 +6,15 @@ import { Footer } from "@/components/Footer";
 import { Star, MapPin, Phone, Shield, Badge, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import axios from "axios";
+
+interface Review {
+  orderId: string;
+  productId: string;
+  rating: number;
+  review: string;
+  timestamp: string;
+  userName?: string;
+}
 const getLevelBadge = (level: string) => {
   const levels = {
     new: { label: "New Member", color: "bg-blue-100 text-blue-700" },
@@ -28,6 +37,7 @@ export default function ProductDetail() {
   const [error, setError] = useState<string | null>(null);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [loadingOrder, setLoadingOrder] = useState(false);
+  const [productReviews, setProductReviews] = useState<Review[]>([]);
 
 
   useEffect(() => {
@@ -55,6 +65,45 @@ export default function ProductDetail() {
         setLoading(false);
       }
     })();
+
+    // Load reviews for this product from localStorage
+    const loadProductReviews = () => {
+      try {
+        const storedReviews = localStorage.getItem('buyer_reviews');
+        
+        if (storedReviews) {
+          const allReviews: Review[] = JSON.parse(storedReviews);
+          const filteredReviews = allReviews.filter(review => review.productId === productId);
+          setProductReviews(filteredReviews);
+        } else {
+          setProductReviews([]);
+        }
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        setProductReviews([]);
+      }
+    };
+
+    loadProductReviews();
+
+    // Listen for localStorage changes (when reviews are added from buyer dashboard)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'buyer_reviews') {
+        loadProductReviews();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check for changes every 2 seconds (in case user is on same tab)
+    const interval = setInterval(() => {
+      loadProductReviews();
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, [productId]);
 
   if (loading) {
@@ -135,6 +184,68 @@ const handlePlaceOrder = async () => {
     setLoadingOrder(false);
   }
 };
+
+  // StarRating component for displaying reviews
+  const StarRating = ({ rating }: { rating: number }) => {
+    return (
+      <div className="flex gap-1">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={`w-4 h-4 ${
+              i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const calculateAverageRating = () => {
+    if (productReviews.length === 0) return '0.0';
+    const total = productReviews.reduce((sum, review) => sum + review.rating, 0);
+    return (total / productReviews.length).toFixed(1);
+  };
+
+  const getCombinedRating = () => {
+    const localRating = parseFloat(calculateAverageRating());
+    const productRating = product.rating || 0;
+    
+    if (productReviews.length > 0 && productRating > 0) {
+      // Combine both ratings if both exist
+      const totalReviews = productReviews.length + (product.reviews?.length || 0);
+      const localTotal = productReviews.reduce((sum, review) => sum + review.rating, 0);
+      const productTotal = productRating * (product.reviews?.length || 1);
+      return ((localTotal + productTotal) / totalReviews).toFixed(1);
+    } else if (productReviews.length > 0) {
+      return localRating.toFixed(1);
+    } else {
+      return productRating.toFixed(1);
+    }
+  };
+
+  // Test function to add sample reviews (for debugging)
+  const addTestReview = () => {
+    if (!productId) return;
+    
+    const testReview: Review = {
+      orderId: 'test-order-' + Date.now(),
+      productId: productId,
+      rating: 5,
+      review: 'Great product! Fresh and high quality.',
+      timestamp: new Date().toISOString(),
+      userName: userData?.name || userData?.backendUser?.fullName || 'Test User'
+    };
+
+    const existingReviews = localStorage.getItem('buyer_reviews'); // Fixed: was 'productReviews'
+    const reviews = existingReviews ? JSON.parse(existingReviews) : [];
+    reviews.push(testReview);
+    localStorage.setItem('buyer_reviews', JSON.stringify(reviews)); // Fixed: was 'productReviews'
+    
+    // Reload reviews
+    const filteredReviews = reviews.filter((review: Review) => review.productId === productId);
+    setProductReviews(filteredReviews);
+  };
 
 
 
@@ -244,15 +355,19 @@ const handlePlaceOrder = async () => {
                       <Star
                         key={i}
                         className={`w-5 h-5 ${
-                          i < Math.floor(product.rating)
+                          i < Math.floor(parseFloat(getCombinedRating()))
                             ? "fill-yellow-400 text-yellow-400"
                             : "text-gray-300"
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="font-bold text-foreground">{product.rating}</span>
-                  <span className="text-muted-foreground">({product.reviews.length} reviews)</span>
+                  <span className="font-bold text-foreground">
+                    {getCombinedRating()}
+                  </span>
+                  <span className="text-muted-foreground">
+                    ({productReviews.length + (product.reviews?.length || 0)} reviews)
+                  </span>
                 </div>
 
                 <div className="mb-4">
@@ -329,10 +444,19 @@ const handlePlaceOrder = async () => {
           </span>
         </div>
         <Button
-          className="w-full bg-ag-green-600 hover:bg-ag-green-700 text-base"
+          className="w-full bg-ag-green-600 hover:bg-ag-green-700 text-base mb-2"
           onClick={handlePlaceOrder}
         >
           Place Order
+        </Button>
+        
+        {/* Debug button for testing reviews */}
+        <Button
+          variant="outline"
+          className="w-full text-sm"
+          onClick={addTestReview}
+        >
+          Add Test Review (Debug)
         </Button>
       </div>
     </div>
@@ -407,36 +531,88 @@ const handlePlaceOrder = async () => {
           </div>
 
           {/* Reviews Section */}
-            {product.reviews && product.reviews.length > 0 && (
-              <div className="mt-16 border-t border-border pt-12">
-                <h2 className="text-2xl font-bold text-foreground mb-6">Customer Reviews</h2>
-                <div className="space-y-4">
-                  {product.reviews.map((review, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-ag-green-50 rounded-xl p-6 border border-ag-green-100"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <div className="font-semibold text-foreground">{review.reviewerName}</div>
-                        </div>
-                        <div className="flex gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-foreground">{review.comment}</p>
-                    </div>
-                  ))}
+          {(productReviews.length > 0 || (product.reviews && product.reviews.length > 0)) ? (
+            <div className="mt-16 border-t border-border pt-12">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-foreground">Customer Reviews</h2>
+                <div className="flex items-center gap-2">
+                  <StarRating rating={Math.floor(parseFloat(getCombinedRating()))} />
+                  <span className="font-semibold text-foreground">
+                    {getCombinedRating()}
+                  </span>
+                  <span className="text-muted-foreground">
+                    ({productReviews.length + (product.reviews?.length || 0)} reviews)
+                  </span>
                 </div>
               </div>
-            )}
+              
+              <div className="space-y-4">
+                {/* Reviews from localStorage (buyer dashboard submissions) */}
+                {productReviews.map((review, idx) => (
+                  <div
+                    key={`local-${idx}`}
+                    className="bg-blue-50 rounded-xl p-6 border border-blue-100"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <div className="font-semibold text-foreground">
+                          {review.userName || 'Anonymous Buyer'}
+                        </div>
+                        {/* <div className="text-sm text-muted-foreground">
+                          {new Date(review.timestamp).toLocaleDateString()}
+                        </div> */}
+                      </div>
+                      <StarRating rating={review.rating} />
+                    </div>
+                    <p className="text-foreground">{review.review}</p>
+                  </div>
+                ))}
+
+                {/* Existing reviews from product data */}
+                {product.reviews && product.reviews.map((review, idx) => (
+                  <div
+                    key={`product-${idx}`}
+                    className="bg-ag-green-50 rounded-xl p-6 border border-ag-green-100"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <div className="font-semibold text-foreground">
+                          {review.reviewerName || 'Anonymous Reviewer'}
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-foreground">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-16 border-t border-border pt-12">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Customer Reviews</h2>
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No reviews yet for this product.</p>
+                <p className="text-sm mt-2">Be the first to leave a review after purchasing!</p>
+                {/* Debug button for testing reviews */}
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={addTestReview}
+                >
+                  Add Test Review (Debug)
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

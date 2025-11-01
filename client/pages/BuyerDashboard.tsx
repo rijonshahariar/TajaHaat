@@ -22,7 +22,8 @@ import {
   Package,
   Clock,
   Truck,
-  CheckCircle
+  CheckCircle,
+  Star
 } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { useTranslation } from "@/lib/i18n";
@@ -58,12 +59,32 @@ interface DemandPost {
   expiresAt: string;
 }
 
+interface Review {
+  id: string;
+  orderId: string;
+  productId: string;
+  sellerNumber: string;
+  sellerName: string;
+  rating: number;
+  review: string;
+  createdAt: string;
+  userName?: string;
+  timestamp: string;
+}
+
 export default function BuyerDashboard() {
   const { t } = useTranslation();
   const { userData } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [demandPosts, setDemandPosts] = useState<DemandPost[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isCreatingDemand, setIsCreatingDemand] = useState(false);
+  const [isRatingOrder, setIsRatingOrder] = useState<string | null>(null);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [ratingData, setRatingData] = useState({
+    rating: 0,
+    review: ''
+  });
   const [newDemand, setNewDemand] = useState({
     title: '',
     category: '',
@@ -104,6 +125,12 @@ export default function BuyerDashboard() {
     const savedDemands = localStorage.getItem('buyer_demands');
     if (savedDemands) {
       setDemandPosts(JSON.parse(savedDemands));
+    }
+
+    // Load reviews from localStorage
+    const savedReviews = localStorage.getItem('buyer_reviews');
+    if (savedReviews) {
+      setReviews(JSON.parse(savedReviews));
     }
   }, [userData]);
 
@@ -189,6 +216,74 @@ export default function BuyerDashboard() {
     }
   };
 
+  const handleSubmitRating = async (orderId: string) => {
+    if (ratingData.rating === 0) {
+      toast({
+        title: "Error",
+        description: "Please select a rating",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoadingSubmit(true);
+
+    try {
+      const order = orders.find(o => o._id === orderId);
+      if (!order) {
+        throw new Error("Order not found");
+      }
+
+      // Get the buyer's name
+      const buyerName = userData?.name || userData?.backendUser?.fullName || 'Anonymous Buyer';
+      console.log('Submitting review with buyer name:', buyerName);
+
+      const newReview: Review = {
+        id: Date.now().toString(),
+        orderId: orderId,
+        productId: order.productId,
+        sellerNumber: order.sellerNumber,
+        sellerName: order.sellerName,
+        rating: ratingData.rating,
+        review: ratingData.review,
+        createdAt: new Date().toISOString(),
+        userName: buyerName,
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('Created review object:', newReview);
+
+      // Simulate network delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const updatedReviews = [...reviews, newReview];
+      setReviews(updatedReviews);
+      localStorage.setItem('buyer_reviews', JSON.stringify(updatedReviews));
+
+      // Reset rating form
+      setRatingData({ rating: 0, review: '' });
+      setIsRatingOrder(null);
+
+      toast({
+        title: "Success",
+        description: "Thank you for your review! It will help other buyers."
+      });
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit review. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingSubmit(false);
+    }
+  };
+
+  const hasReviewed = (orderId: string) => {
+    return reviews.some(review => review.orderId === orderId);
+  };
+
   // Professional shipping status tracker component
   const OrderStatusTracker = ({ status }: { status: string }) => {
     const steps = [
@@ -224,10 +319,47 @@ export default function BuyerDashboard() {
     }
 
     return (
-      <div className="p-4 bg-gray-50 rounded-lg">
-        <div className="flex items-center justify-between">
+      <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+        {/* Mobile View - Vertical Layout */}
+        <div className="block sm:hidden space-y-3">
           {steps.map((step, index) => (
-            <div key={step.key} className="flex items-center">
+            <div key={step.key} className="flex items-center gap-3">
+              {/* Step Circle */}
+              <div className={`
+                flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all flex-shrink-0
+                ${index <= currentStepIndex 
+                  ? 'bg-green-500 border-green-500 text-white' 
+                  : 'bg-white border-gray-300 text-gray-400'
+                }
+              `}>
+                {index <= currentStepIndex ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  step.icon
+                )}
+              </div>
+              
+              {/* Step Label */}
+              <div className="flex-1">
+                <p className={`text-sm font-medium ${
+                  index <= currentStepIndex ? 'text-green-700' : 'text-gray-500'
+                }`}>
+                  {step.label}
+                </p>
+              </div>
+              
+              {/* Status Indicator */}
+              {index <= currentStepIndex && (
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop View - Horizontal Layout */}
+        <div className="hidden sm:flex items-center justify-between">
+          {steps.map((step, index) => (
+            <div key={step.key} className="flex items-center min-w-0">
               {/* Step Circle */}
               <div className={`
                 flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all
@@ -255,13 +387,49 @@ export default function BuyerDashboard() {
               {/* Connecting Line */}
               {index < steps.length - 1 && (
                 <div className={`
-                  flex-1 h-0.5 mx-4 transition-all
+                  flex-1 h-0.5 mx-4 transition-all min-w-4
                   ${index < currentStepIndex ? 'bg-green-500' : 'bg-gray-300'}
                 `} />
               )}
             </div>
           ))}
         </div>
+      </div>
+    );
+  };
+
+  // Star Rating Component
+  const StarRating = ({ rating, setRating, readonly = false }: { rating: number; setRating?: (rating: number) => void; readonly?: boolean }) => {
+    const [hoverRating, setHoverRating] = useState(0);
+
+    return (
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            disabled={readonly}
+            onClick={() => !readonly && setRating && setRating(star)}
+            onMouseEnter={() => !readonly && setHoverRating(star)}
+            onMouseLeave={() => !readonly && setHoverRating(0)}
+            className={`${
+              readonly 
+                ? 'cursor-default' 
+                : 'cursor-pointer hover:scale-125 active:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50 rounded'
+            } transition-all duration-200 ease-in-out p-1`}
+            aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+          >
+            <Star
+              className={`w-6 h-6 sm:w-8 sm:h-8 transition-colors duration-200 ${
+                star <= (hoverRating || rating)
+                  ? 'fill-yellow-400 text-yellow-400' 
+                  : readonly
+                  ? 'text-gray-300'
+                  : 'text-gray-300 hover:text-yellow-200'
+              }`}
+            />
+          </button>
+        ))}
       </div>
     );
   };
@@ -368,56 +536,232 @@ export default function BuyerDashboard() {
             <div className="space-y-4">
               {orders.map((order) => (
                 <Card key={order._id}>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <div className="flex flex-col gap-4">
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                      <div className="flex flex-col gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <h3 className="font-bold text-lg">{order.productName}</h3>
-                            <div className="flex items-center gap-2">
-                              <Package className="w-4 h-4 text-gray-500" />
-                              <span>Order ID: {order._id.slice(-8)}</span>
+                          {/* Header Section - Mobile Optimized */}
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg mb-2">{order.productName}</h3>
+                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <Package className="w-4 h-4" />
+                                <span>Order ID: {order._id.slice(-8)}</span>
+                              </div>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
-                            <div className="flex items-center gap-2">
-                              <Phone className="w-4 h-4 text-gray-500" />
-                              <span>{order.sellerName} - {order.sellerNumber}</span>
+                          {/* Order Details - Responsive Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-sm mb-4">
+                            <div className="flex items-center gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded sm:rounded-none">
+                              <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                              <span className="truncate">{order.sellerName} - {order.sellerNumber}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Package className="w-4 h-4 text-gray-500" />
-                              <span>{order.quantity} units @ ৳{order.price} each</span>
+                            <div className="flex items-center gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded sm:rounded-none">
+                              <Package className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                              <span className="truncate">{order.quantity} units @ ৳{order.price} each</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <DollarSign className="w-4 h-4 text-gray-500" />
-                              <span>Total: ৳{order.quantity * order.price}</span>
+                            <div className="flex items-center gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded sm:rounded-none">
+                              <DollarSign className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                              <span className="truncate">Total: ৳{order.quantity * order.price}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4 text-gray-500" />
-                              <span>{new Date(order.orderDate).toLocaleDateString()}</span>
+                            <div className="flex items-center gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded sm:rounded-none">
+                              <Calendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                              <span className="truncate">{new Date(order.orderDate).toLocaleDateString()}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <MapPin className="w-4 h-4 text-gray-500" />
-                              <span>Delivery: {userData?.backendUser?.address || 'Address not provided'}</span>
+                            <div className="flex items-center gap-2 p-2 sm:p-0 bg-gray-50 sm:bg-transparent rounded sm:rounded-none sm:col-span-2 lg:col-span-1">
+                              <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                              <span className="truncate">Delivery: {userData?.backendUser?.address || 'Address not provided'}</span>
                             </div>
-                            
                           </div>
                         </div>
                         
-                        {(order.status === 'pending' || order.status === 'accepted') && (
-                          <div className="flex gap-2">
+                        {/* Action Buttons - Mobile Responsive */}
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                          {(order.status === 'pending' || order.status === 'accepted') && (
                             <Button 
                               variant="outline" 
                               size="sm"
                               onClick={() => handleCancelOrder(order._id)}
-                              className="text-red-600 hover:text-red-700"
+                              className="text-red-600 hover:text-red-700 w-full sm:w-auto"
                             >
                               <X className="w-4 h-4 mr-1" />
                               Cancel Order
                             </Button>
-                          </div>
-                        )}
+                          )}
+
+                          {order.status === 'delivered' && !hasReviewed(order._id) && (
+                            <Dialog 
+                              open={isRatingOrder === order._id} 
+                              onOpenChange={(open) => {
+                                if (!open) {
+                                  setIsRatingOrder(null);
+                                  setRatingData({ rating: 0, review: '' });
+                                  setLoadingSubmit(false);
+                                }
+                              }}
+                            >
+                              <DialogTrigger asChild>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => setIsRatingOrder(order._id)}
+                                  className="bg-yellow-500 hover:bg-yellow-600 transition-colors duration-200 focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50 w-full sm:w-auto"
+                                  aria-label={`Rate and review order for ${order.productName}`}
+                                >
+                                  <Star className="w-4 h-4 mr-1" />
+                                  Rate & Review
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle className="text-xl">Rate Your Experience</DialogTitle>
+                                  <DialogDescription className="text-base">
+                                    How was your experience with {order.sellerName}? Your feedback helps other buyers.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-6 py-4">
+                                  {/* Reviewer Info */}
+                                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div className="text-sm">
+                                      <p className="font-medium text-blue-800">Writing as:</p>
+                                      <p className="text-blue-700 text-base font-semibold">
+                                        {userData?.name || userData?.backendUser?.fullName || 'Anonymous Buyer'}
+                                      </p>
+                                      <p className="text-xs text-blue-600 mt-1">
+                                        This name will be visible to other customers
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    <Label className="text-lg font-semibold">Rating *</Label>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                      <StarRating 
+                                        rating={ratingData.rating} 
+                                        setRating={(rating) => setRatingData(prev => ({ ...prev, rating }))}
+                                      />
+                                      <span className="text-sm sm:text-base text-gray-600 font-medium">
+                                        {ratingData.rating > 0 && (
+                                          ratingData.rating === 1 ? '⭐ Poor' :
+                                          ratingData.rating === 2 ? '⭐⭐ Fair' :
+                                          ratingData.rating === 3 ? '⭐⭐⭐ Good' :
+                                          ratingData.rating === 4 ? '⭐⭐⭐⭐ Very Good' : '⭐⭐⭐⭐⭐ Excellent'
+                                        )}
+                                      </span>
+                                    </div>
+                                    {ratingData.rating === 0 && (
+                                      <p className="text-red-500 text-sm">Please select a rating</p>
+                                    )}
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    <Label htmlFor="review" className="text-lg font-semibold">
+                                      Review (Optional)
+                                    </Label>
+                                    <Textarea
+                                      id="review"
+                                      value={ratingData.review}
+                                      onChange={(e) => setRatingData(prev => ({ ...prev, review: e.target.value }))}
+                                      placeholder="Share your experience with this seller... (e.g., product quality, delivery time, communication)"
+                                      rows={4}
+                                      className="mt-1 text-base resize-none"
+                                      maxLength={500}
+                                    />
+                                    <div className="flex justify-between">
+                                      <p className="text-xs text-gray-500">
+                                        Your review will help other buyers make informed decisions
+                                      </p>
+                                      <p className="text-xs text-gray-400">
+                                        {ratingData.review.length}/500
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="p-4 bg-gray-50 rounded-lg border">
+                                    <div className="text-sm space-y-1">
+                                      <p className="font-semibold text-gray-800">Order Details:</p>
+                                      <p className="text-gray-700 font-medium">{order.productName}</p>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                        <p className="text-gray-600">Seller: {order.sellerName}</p>
+                                        <p className="text-gray-600">Amount: ৳{order.quantity * order.price}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Review Preview */}
+                                  {(ratingData.rating > 0 || ratingData.review) && (
+                                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                                      <p className="font-semibold text-green-800 text-base mb-3">
+                                        📝 Preview (How it will appear to others):
+                                      </p>
+                                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                                          <div>
+                                            <div className="font-semibold text-foreground">
+                                              {userData?.name || userData?.backendUser?.fullName || 'Anonymous Buyer'}
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">
+                                              {new Date().toLocaleDateString()}
+                                            </div>
+                                          </div>
+                                          <div className="flex gap-1">
+                                            {[...Array(5)].map((_, i) => (
+                                              <Star
+                                                key={i}
+                                                className={`w-4 h-4 ${
+                                                  i < ratingData.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                                }`}
+                                              />
+                                            ))}
+                                          </div>
+                                        </div>
+                                        {ratingData.review && (
+                                          <p className="text-foreground">{ratingData.review}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t">
+                                  <Button 
+                                    variant="outline" 
+                                    onClick={() => {
+                                      setIsRatingOrder(null);
+                                      setRatingData({ rating: 0, review: '' });
+                                      setLoadingSubmit(false);
+                                    }}
+                                    disabled={loadingSubmit}
+                                    className="w-full sm:w-auto"
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button 
+                                    onClick={() => handleSubmitRating(order._id)}
+                                    disabled={ratingData.rating === 0 || loadingSubmit}
+                                    className="w-full sm:w-auto min-w-[120px]"
+                                  >
+                                    {loadingSubmit ? (
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        Submitting...
+                                      </div>
+                                    ) : (
+                                      'Submit Review'
+                                    )}
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+
+                          {order.status === 'delivered' && hasReviewed(order._id) && (
+                            <div className="flex items-center gap-2 text-sm text-green-600">
+                              <CheckCircle className="w-4 h-4" />
+                              <span>Review submitted</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       
                       {/* Professional Status Tracker */}
@@ -980,6 +1324,66 @@ export default function BuyerDashboard() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Reviews & Ratings */}
+            {reviews.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="w-5 h-5" />
+                    My Reviews & Ratings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="p-4 bg-gray-50 rounded-lg border">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <p className="font-medium">{review.sellerName}</p>
+                            <p className="text-sm text-gray-600">{review.sellerNumber}</p>
+                            <p className="text-xs text-green-600 font-medium">
+                              Reviewed as: {review.userName || 'Anonymous Buyer'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <StarRating rating={review.rating} readonly />
+                            <span className="text-sm text-gray-600">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {review.review && (
+                          <p className="text-sm text-gray-700 mt-2">{review.review}</p>
+                        )}
+                        
+                        <div className="flex justify-between items-center mt-2">
+                          <div className="text-xs text-gray-500">
+                            Order ID: {review.orderId.slice(-8)}
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            Visible to other customers
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Star className="w-4 h-4 text-blue-600" />
+                      <span className="font-medium text-blue-800">Your Average Rating</span>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      You've given an average rating of {(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)} stars 
+                      across {reviews.length} review{reviews.length !== 1 ? 's' : ''}. 
+                      Your feedback helps build a better marketplace community!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
