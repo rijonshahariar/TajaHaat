@@ -55,22 +55,18 @@ interface Product {
   expiryDate: string;
 }
 
-// Order interface matching backend schema
+// Order interface matching backend schema (simplified structure)
 interface Order {
   _id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  price: number;
   buyerNumber: string;
   sellerNumber: string;
-  products: {
-    productId: string;
-    productName: string;
-    quantity: number;
-    price: number;
-  }[];
-  totalAmount: number;
-  status: 'pending' | 'accepted' | 'rejected' | 'in_transit' | 'delivered' | 'cancelled' | 'shipped';
+  sellerName: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'delivered' | 'cancelled' | 'shipped' | 'completed';
   orderDate: string;
-  deliveryAddress: string;
-  paymentMethod: string;
 }
 
 export default function FarmerDashboard() {
@@ -142,8 +138,9 @@ export default function FarmerDashboard() {
   const uploadImageToImgBB = async (file: File): Promise<string> => {
     try {
       console.log('Uploading image using apiService...', file.name);
-      // Use the same apiService that Register.tsx uses
-      const imageUrl = await (apiService as any).uploadImage(file);
+      
+      // Use the public uploadImageFile method from apiService
+      const imageUrl = await apiService.uploadImageFile(file);
       console.log('Image uploaded successfully:', imageUrl);
       return imageUrl;
     } catch (error) {
@@ -404,9 +401,9 @@ export default function FarmerDashboard() {
   const stats = {
     totalProducts: products.length,
     pendingOrders: orders.filter(o => o.status === 'pending').length,
-    totalRevenue: orders.filter(o => o.status === 'shipped' || o.status === 'delivered')
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0),
-    completedOrders: orders.filter(o => o.status === 'delivered').length
+    totalRevenue: orders.filter(o => o.status === 'shipped' || o.status === 'delivered' || o.status === 'completed')
+      .reduce((sum, o) => sum + (o.price * o.quantity), 0),
+    completedOrders: orders.filter(o => o.status === 'delivered' || o.status === 'completed').length
   };
   
   return (
@@ -891,18 +888,14 @@ export default function FarmerDashboard() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
-                        <p className="text-sm font-medium">Products:</p>
+                        <p className="text-sm font-medium">Product:</p>
                         <div className="text-sm text-gray-600">
-                          {order.products.map((product, index) => (
-                            <div key={index}>
-                              {product.productName} x{product.quantity} = ৳{product.price * product.quantity}
-                            </div>
-                          ))}
+                          {order.productName} x{order.quantity} = ৳{order.price * order.quantity}
                         </div>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Total Amount:</p>
-                        <p className="text-lg font-bold text-green-600">৳{order.totalAmount}</p>
+                        <p className="text-lg font-bold text-green-600">৳{order.price * order.quantity}</p>
                       </div>
                     </div>
                     
@@ -1022,7 +1015,7 @@ export default function FarmerDashboard() {
                       <span>Success Rate:</span>
                       <span className="font-bold">
                         {orders.length > 0 
-                          ? ((orders.filter(o => o.status === 'delivered').length / orders.length) * 100).toFixed(1)
+                          ? ((orders.filter(o => o.status === 'delivered' || o.status === 'completed').length / orders.length) * 100).toFixed(1)
                           : '0'
                         }%
                       </span>

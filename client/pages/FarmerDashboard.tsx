@@ -34,6 +34,7 @@ import { useTranslation } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/apiService";
+import WhatsAppService from "@/lib/whatsappService";
 import axios from 'axios';
 
 // Product interface matching backend schema
@@ -398,6 +399,38 @@ export default function FarmerDashboard() {
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Test WhatsApp notification function
+  const handleTestWhatsApp = async () => {
+    try {
+      toast({
+        title: "Sending Test WhatsApp",
+        description: "Testing WhatsApp notification...",
+      });
+
+      const success = await WhatsAppService.sendTestMessage();
+      
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Test WhatsApp message sent successfully!",
+        });
+      } else {
+        toast({
+          title: "Warning",
+          description: "WhatsApp message failed to send. Check console for details.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Test WhatsApp error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send test WhatsApp message",
+        variant: "destructive"
+      });
     }
   };
 
@@ -944,6 +977,46 @@ export default function FarmerDashboard() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
+            
+            {/* WhatsApp Test Section */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <Phone className="w-5 h-5" />
+                  WhatsApp Notifications (Demo)
+                </CardTitle>
+                <CardDescription className="text-blue-600">
+                  Test the WhatsApp notification system that sends alerts to farmers when buyers place orders.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-lg border border-blue-200">
+                    <p className="text-sm text-gray-600 mb-2">
+                      <strong>Sample Message:</strong>
+                    </p>
+                    <div className="bg-green-50 p-3 rounded border-l-4 border-green-400 text-sm">
+                      🚨 <strong>New Order Alert!</strong><br/>
+                      📦 <strong>Product:</strong> Fresh Tomatoes (10 kg)<br/>
+                      💰 <strong>Price:</strong> ৳50 per kg<br/>
+                      💵 <strong>Total Amount:</strong> ৳500<br/>
+                      📍 <strong>Delivery Location:</strong> Dhaka, Mirpur-1<br/>
+                      🔗 <strong>Manage Order:</strong> https://taja-haat.vercel.app/farmer-dashboard
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={handleTestWhatsApp}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Send Test WhatsApp Message
+                  </Button>
+                  <p className="text-xs text-gray-500 text-center">
+                    This will send a test message to the demo number. Check console for API response.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>

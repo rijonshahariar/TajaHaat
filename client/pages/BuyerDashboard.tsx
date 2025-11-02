@@ -42,6 +42,8 @@ interface Order {
   buyerNumber: string;
   status: 'pending' | 'accepted' | 'rejected' | 'in_transit' | 'delivered' | 'cancelled' | 'shipped';
   orderDate: string;
+  isLocal?: boolean;
+  totalAmount?: number;
 }
 
 interface DemandPost {
@@ -108,13 +110,31 @@ export default function BuyerDashboard() {
         const buyerOrders = response.data.filter((order: Order) => 
           order.buyerNumber === userData.phone
         );
-        setOrders(buyerOrders);
+        
+        // Also load pending local orders
+        const pendingOrders = JSON.parse(localStorage.getItem('pending_orders') || '[]');
+        const userPendingOrders = pendingOrders.filter((order: any) => 
+          order.buyerNumber === userData.phone
+        );
+        
+        // Combine backend orders with local orders
+        const allOrders = [...buyerOrders, ...userPendingOrders];
+        setOrders(allOrders);
       } catch (error) {
         console.error('Failed to fetch orders:', error);
+        
         // Fallback to localStorage if API fails
         const savedOrders = localStorage.getItem('buyer_orders');
+        const pendingOrders = JSON.parse(localStorage.getItem('pending_orders') || '[]');
+        const userPendingOrders = pendingOrders.filter((order: any) => 
+          order.buyerNumber === userData.phone
+        );
+        
         if (savedOrders) {
-          setOrders(JSON.parse(savedOrders));
+          const localOrders = JSON.parse(savedOrders);
+          setOrders([...localOrders, ...userPendingOrders]);
+        } else {
+          setOrders(userPendingOrders);
         }
       }
     };
@@ -285,9 +305,9 @@ export default function BuyerDashboard() {
   };
 
   // Professional shipping status tracker component
-  const OrderStatusTracker = ({ status }: { status: string }) => {
+  const OrderStatusTracker = ({ status, isLocal = false }: { status: string; isLocal?: boolean }) => {
     const steps = [
-      { key: 'pending', label: 'Order Placed', icon: <Package className="w-4 h-4" /> },
+      { key: 'pending', label: isLocal ? 'Order Saved (Pending Sync)' : 'Order Placed', icon: <Package className="w-4 h-4" /> },
       { key: 'accepted', label: 'Confirmed', icon: <CheckCircle className="w-4 h-4" /> },
       { key: 'in_transit', label: 'In Transit', icon: <Truck className="w-4 h-4" /> },
       { key: 'delivered', label: 'Delivered', icon: <CheckCircle className="w-4 h-4" /> }
@@ -765,7 +785,7 @@ export default function BuyerDashboard() {
                       </div>
                       
                       {/* Professional Status Tracker */}
-                      <OrderStatusTracker status={order.status} />
+                      <OrderStatusTracker status={order.status} isLocal={order.isLocal} />
                     </div>
                   </CardContent>
                 </Card>

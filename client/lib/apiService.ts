@@ -289,6 +289,11 @@ class ApiService {
       throw error;
     }
   }
+
+  // Public method for uploading images
+  async uploadImageFile(file: File): Promise<string> {
+    return this.uploadImage(file);
+  }
 }
 
 export const apiService = new ApiService();
