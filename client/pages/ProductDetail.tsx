@@ -54,7 +54,7 @@ export default function ProductDetail() {
     (async () => {
       try {
         
-        const res = await fetch(`https://taja-haat-backend.vercel.app/products/${productId}`);
+        const res = await fetch(`https://taja-haat-backend-muntakim.vercel.app/products/${productId}`);
         const data = await res.json();
         // console.log(data);
         if (!data) {
@@ -181,9 +181,7 @@ const handlePlaceOrder = async () => {
     return;
   }
 
-  // Since backend is failing, let's just use local storage approach
   const orderData = {
-    _id: 'local_' + Date.now(),
     productId: String(product._id),
     productName: String(product.itemName),
     quantity: Number(quantity),
@@ -191,71 +189,117 @@ const handlePlaceOrder = async () => {
     sellerNumber: String(product.sellerNumber),
     sellerName: String(product.sellerName || 'Unknown Seller'),
     buyerNumber: String(userData?.phone || userData?.backendUser?.phoneNumber || "01898765432"),
-    status: "pending",
+    status: "pending" as const,
     orderDate: new Date().toISOString(),
-    isLocal: true,
-    totalAmount: Number(product.price * quantity)
+    totalAmount: Number(product.price * quantity),
+    createdAt: new Date().toISOString()
   };
 
   try {
     setLoadingOrder(true);
+    console.log('Creating order via API:', orderData);
     
-    console.log('Creating local order:', orderData);
-    
-    // Store order locally
-    const localOrders = JSON.parse(localStorage.getItem('pending_orders') || '[]');
-    localOrders.push(orderData);
-    localStorage.setItem('pending_orders', JSON.stringify(localOrders));
-    
-    // Show success immediately
-    toast({
-      title: "Order Placed Successfully!",
-      description: `Your order for ${quantity}kg of ${product.itemName} has been placed.`,
-    });
-    
-    // Send WhatsApp notification to farmer
+    // Try to create order via API first
     try {
-      const whatsappData = {
-        productName: product.itemName,
-        quantity: quantity,
-        unit: product.unit || 'kg',
-        price: product.price,
-        totalAmount: product.price * quantity,
-        deliveryLocation: userData?.backendUser?.address || "Dhaka, Bangladesh",
-        farmerPhone: product.sellerNumber,
-        buyerPhone: userData?.phone || userData?.backendUser?.phoneNumber || "01898765432"
+      const response = await fetch('https://taja-haat-backend-muntakim.vercel.app/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (response.ok) {
+        const createdOrder = await response.json();
+        console.log('Order created successfully via API:', createdOrder);
+        
+        toast({
+          title: "Order Placed Successfully!",
+          description: `Your order for ${quantity}kg of ${product.itemName} has been placed.`,
+        });
+
+        // Send WhatsApp notification to the specified number
+        try {
+          const whatsappData = {
+            productName: product.itemName,
+            quantity: quantity,
+            unit: product.unit || 'kg',
+            price: product.price,
+            totalAmount: product.price * quantity,
+            deliveryLocation: userData?.backendUser?.address || "Dhaka, Bangladesh",
+            farmerPhone: "8801400505738", // Fixed number as requested
+            buyerPhone: userData?.phone || userData?.backendUser?.phoneNumber || "01898765432",
+            buyerName: userData?.name || userData?.backendUser?.fullName || "Customer"
+          };
+          
+          console.log('Sending WhatsApp notification...');
+          const whatsappSent = await WhatsAppService.sendOrderNotification(whatsappData);
+          
+          if (whatsappSent) {
+            console.log('WhatsApp notification sent successfully');
+            toast({
+              title: "Notification Sent",
+              description: "Order notification has been sent via WhatsApp.",
+            });
+          }
+        } catch (whatsappError) {
+          console.error('WhatsApp notification error:', whatsappError);
+          // Don't show error for WhatsApp failure as order was successful
+        }
+
+        setOrderPlaced(true);
+        setTimeout(() => {
+          navigate("/buyer-dashboard");
+        }, 3000);
+        
+        return;
+      } else {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+    } catch (apiError) {
+      console.error('API order creation failed:', apiError);
+      
+      // Fallback to local storage
+      console.log('Falling back to local storage...');
+      const localOrderData = {
+        ...orderData,
+        _id: 'local_' + Date.now(),
+        isLocal: true
       };
       
-      console.log('Sending WhatsApp notification to farmer...');
-      const whatsappSent = await WhatsAppService.sendOrderNotification(whatsappData);
+      const localOrders = JSON.parse(localStorage.getItem('pending_orders') || '[]');
+      localOrders.push(localOrderData);
+      localStorage.setItem('pending_orders', JSON.stringify(localOrders));
       
-      if (whatsappSent) {
-        console.log('WhatsApp notification sent successfully to farmer');
-        toast({
-          title: "Farmer Notified",
-          description: "The farmer has been notified via WhatsApp about your order.",
-        });
-      } else {
-        console.warn('WhatsApp notification failed, but order was placed successfully');
-        toast({
-          title: "Order Placed",
-          description: "Order placed successfully. Farmer will be contacted manually.",
-        });
-      }
-    } catch (whatsappError) {
-      console.error('WhatsApp notification error:', whatsappError);
       toast({
-        title: "Order Placed",
-        description: "Order placed successfully. Farmer will be contacted manually.",
+        title: "Order Saved Locally",
+        description: "Order saved locally. Will sync when connection is restored.",
       });
-    }
-    
-    setOrderPlaced(true);
 
-    // Redirect to buyer dashboard after 3 seconds
-    setTimeout(() => {
-      navigate("/buyer-dashboard");
-    }, 3000);
+      // Still send WhatsApp notification
+      try {
+        const whatsappData = {
+          productName: product.itemName,
+          quantity: quantity,
+          unit: product.unit || 'kg',
+          price: product.price,
+          totalAmount: product.price * quantity,
+          deliveryLocation: userData?.backendUser?.address || "Dhaka, Bangladesh",
+          farmerPhone: "01400505738", // Fixed number as requested
+          buyerPhone: userData?.phone || userData?.backendUser?.phoneNumber || "01898765432",
+          buyerName: userData?.name || userData?.backendUser?.fullName || "Customer"
+        };
+        
+        await WhatsAppService.sendOrderNotification(whatsappData);
+      } catch (whatsappError) {
+        console.error('WhatsApp notification error:', whatsappError);
+      }
+
+      setOrderPlaced(true);
+      setTimeout(() => {
+        navigate("/buyer-dashboard");
+      }, 3000);
+    }
     
   } catch (err: any) {
     console.error("Failed to place order:", err);
@@ -552,10 +596,35 @@ const handlePlaceOrder = async () => {
         {/* Debug button for testing reviews */}
         <Button
           variant="outline"
-          className="w-full text-sm"
+          className="w-full text-sm mb-2"
           onClick={addTestReview}
         >
           Add Test Review (Debug)
+        </Button>
+        
+        {/* WhatsApp Test Button */}
+        <Button
+          variant="outline"
+          className="w-full text-sm"
+          onClick={async () => {
+            try {
+              const result = await WhatsAppService.sendTestMessage();
+              toast({
+                title: result ? "WhatsApp Test Success" : "WhatsApp Test Failed",
+                description: result ? "Check console for details" : "Check console for error details",
+                variant: result ? "default" : "destructive"
+              });
+            } catch (error) {
+              console.error('WhatsApp test error:', error);
+              toast({
+                title: "WhatsApp Test Error",
+                description: "Check console for error details",
+                variant: "destructive"
+              });
+            }
+          }}
+        >
+          Test WhatsApp Message
         </Button>
       </div>
     </div>

@@ -19,7 +19,7 @@ export default function Register() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-  const [role, setRole] = useState<"farmer" | "buyer" | null>(null);
+  const [role, setRole] = useState<"farmer" | "buyer" | "driver" | null>(null);
   const [address, setAddress] = useState("");
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -177,7 +177,7 @@ export default function Register() {
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-3">{t('auth.i_am_a')}</label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <button
                         type="button"
                         onClick={() => setRole("farmer")}
@@ -201,6 +201,18 @@ export default function Register() {
                         }`}
                       >
                         🏪 {t('auth.buyer')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRole("driver")}
+                        disabled={isSubmitting || loading}
+                        className={`p-4 rounded-xl border-2 transition-colors text-center font-medium ${
+                          role === "driver"
+                            ? "border-ag-green-600 bg-ag-green-50 text-ag-green-700"
+                            : "border-border hover:border-ag-green-200"
+                        }`}
+                      >
+                        🚚 Driver
                       </button>
                     </div>
                   </div>

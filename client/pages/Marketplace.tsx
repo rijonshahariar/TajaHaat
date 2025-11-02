@@ -19,7 +19,7 @@ export default function Marketplace() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("https://taja-haat-backend.vercel.app/products");
+        const res = await fetch("https://taja-haat-backend-muntakim.vercel.app/products");
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         setProducts(data);

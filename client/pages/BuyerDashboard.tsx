@@ -105,7 +105,7 @@ export default function BuyerDashboard() {
       if (!userData?.phone) return;
       
       try {
-        const response = await axios.get('https://taja-haat-backend.vercel.app/orders');
+        const response = await axios.get('https://taja-haat-backend-muntakim.vercel.app/orders');
         // Filter orders for current buyer
         const buyerOrders = response.data.filter((order: Order) => 
           order.buyerNumber === userData.phone
@@ -210,7 +210,7 @@ export default function BuyerDashboard() {
   const handleCancelOrder = async (orderId: string) => {
     try {
       // Update order status to cancelled on the backend
-      await axios.put(`https://taja-haat-backend.vercel.app/orders/${orderId}`, {
+      await axios.put(`https://taja-haat-backend-muntakim.vercel.app/orders/${orderId}`, {
         status: 'cancelled'
       });
       

@@ -30,9 +30,10 @@ export function Header() {
     { to: "/marketplace", label: t('nav.marketplace'), icon: Store },
     { to: "/dashboard", label: t('nav.dashboard'), icon: Package },
     ...(userData?.role === 'farmer' ? [{ to: "/bids", label: t('nav.bids'), icon: MessageSquare }] : []),
+    ...(userData?.role === 'driver' ? [{ to: "/driver-dashboard", label: "Driver Dashboard", icon: Package }] : []),
     { to: "/pricing", label: t('nav.pricing'), icon: BarChart3 },
     { to: "/about", label: t('nav.about'), icon: Info },
-    { to: "/contact", label: t('nav.contact'), icon: Phone },
+    { to: "/forecast", label: "Forecast", icon: Phone },
   ];
 
   return (

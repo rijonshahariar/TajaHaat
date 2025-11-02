@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://taja-haat-backend.vercel.app';
+const API_BASE_URL = 'https://taja-haat-backend-muntakim.vercel.app';
 
 export interface BackendUser {
   _id?: string;
@@ -10,7 +10,32 @@ export interface BackendUser {
   level: number;
   rating: number;
   image: string;
-  role: 'farmer' | 'buyer' | 'admin';
+  role: 'farmer' | 'buyer' | 'admin' | 'driver';
+}
+
+export interface Order {
+  _id?: string;
+  productId: string;
+  productName?: string;
+  quantity: number;
+  price: number;
+  sellerNumber: string;
+  sellerName?: string;
+  buyerNumber: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'in-transit' | 'delivered' | 'cancelled' | 'shipped' | 'driver-assigned';
+  orderDate?: string;
+  createdAt: string;
+  isLocal?: boolean;
+  totalAmount?: number;
+  pickupAddress?: string;
+  deliveryAddress?: string;
+  seller?: BackendUser;
+  buyer?: BackendUser;
+  product?: {
+    name: string;
+    price: number;
+    unit: string;
+  };
 }
 
 export interface CreateUserRequest {
@@ -18,7 +43,7 @@ export interface CreateUserRequest {
   address: string;
   phoneNumber: string;
   email: string; // Required string (phone@gmail.com format)
-  role: 'farmer' | 'buyer' | 'admin';
+  role: 'farmer' | 'buyer' | 'admin' | 'driver';
   image?: File;
 }
 
@@ -293,6 +318,170 @@ class ApiService {
   // Public method for uploading images
   async uploadImageFile(file: File): Promise<string> {
     return this.uploadImage(file);
+  }
+
+  // Order management methods
+  async createOrder(orderData: Omit<Order, '_id'>): Promise<Order> {
+    try {
+      console.log('Creating order...', orderData);
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Create order error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const createdOrder = await response.json();
+      console.log('Order created successfully:', createdOrder);
+      return createdOrder;
+    } catch (error) {
+      console.error('Create order error:', error);
+      throw error;
+    }
+  }
+
+  async getOrderById(orderId: string): Promise<Order | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error('Failed to fetch order');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get order by ID error:', error);
+      return null;
+    }
+  }
+
+  async getAllOrders(): Promise<Order[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get all orders error:', error);
+      return [];
+    }
+  }
+
+  // Alias method for consistency with driver dashboard
+  async getOrders(): Promise<Order[]> {
+    return this.getAllOrders();
+  }
+
+  // Method to fetch orders by status
+  async getOrdersByStatus(status: Order['status']): Promise<Order[]> {
+    try {
+      const allOrders = await this.getAllOrders();
+      return allOrders.filter(order => order.status === status);
+    } catch (error) {
+      console.error('Get orders by status error:', error);
+      return [];
+    }
+  }
+
+  // Method to fetch accepted orders for drivers
+  async getAcceptedOrders(): Promise<Order[]> {
+    return this.getOrdersByStatus('accepted');
+  }
+
+  // Method to fetch orders with full user details for drivers
+  async getOrdersWithUserDetails(): Promise<Order[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders?includeUserDetails=true`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders with user details');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get orders with user details error:', error);
+      // Fallback to regular orders API
+      return this.getAllOrders();
+    }
+  }
+
+  // Method to update order status specifically
+  async updateOrderStatus(orderId: string, status: Order['status']): Promise<Order> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update order status');
+      }
+
+      const updatedOrder = await response.json();
+      console.log('Order status updated successfully:', updatedOrder);
+      return updatedOrder;
+    } catch (error) {
+      console.error('Update order status error:', error);
+      throw error;
+    }
+  }
+
+  async updateOrder(orderId: string, updates: Partial<Order>): Promise<Order> {
+    try {
+      console.log('Updating order:', orderId, updates);
+      
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Update order error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const updatedOrder = await response.json();
+      console.log('Order updated successfully:', updatedOrder);
+      return updatedOrder;
+    } catch (error) {
+      console.error('Update order error:', error);
+      throw error;
+    }
+  }
+
+  async deleteOrder(orderId: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete order');
+      }
+    } catch (error) {
+      console.error('Delete order error:', error);
+      throw error;
+    }
   }
 }
 

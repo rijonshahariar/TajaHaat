@@ -34,7 +34,7 @@ interface UserData {
   name: string;
   phone: string;
   password: string;
-  role: 'farmer' | 'buyer' | 'admin';
+  role: 'farmer' | 'buyer' | 'admin' | 'driver';
   isPhoneVerified: boolean;
   createdAt: string;
   backendUser?: BackendUser;
@@ -129,7 +129,7 @@ export const useAuth = () => {
     name: string,
     phoneNumber: string,
     password: string,
-    role: 'farmer' | 'buyer',
+    role: 'farmer' | 'buyer' | 'driver',
     address: string = '',
     profileImage?: File
   ) => {

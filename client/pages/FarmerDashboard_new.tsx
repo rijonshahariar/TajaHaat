@@ -100,7 +100,7 @@ export default function FarmerDashboard() {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('https://taja-haat-backend.vercel.app/products');
+      const response = await axios.get('https://taja-haat-backend-muntakim.vercel.app/products');
       // Filter products for current farmer
       const farmerProducts = response.data.filter((product: Product) => 
         product.sellerNumber === userData?.phone
@@ -118,7 +118,7 @@ export default function FarmerDashboard() {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('https://taja-haat-backend.vercel.app/orders');
+      const response = await axios.get('https://taja-haat-backend-muntakim.vercel.app/orders');
       // Filter orders for current farmer
       const farmerOrders = response.data.filter((order: Order) => 
         order.sellerNumber === userData?.phone
@@ -222,7 +222,7 @@ export default function FarmerDashboard() {
       };
 
       console.log('Creating product:', productToAdd);
-      const response = await axios.post('https://taja-haat-backend.vercel.app/products', productToAdd);
+      const response = await axios.post('https://taja-haat-backend-muntakim.vercel.app/products', productToAdd);
       
       if (response.status === 201) {
         await fetchProducts(); // Refresh products list
@@ -300,7 +300,7 @@ export default function FarmerDashboard() {
 
       console.log('Updating product:', updatedProduct);
       const response = await axios.put(
-        `https://taja-haat-backend.vercel.app/products/${editingProduct._id}`,
+        `https://taja-haat-backend-muntakim.vercel.app/products/${editingProduct._id}`,
         updatedProduct
       );
       
@@ -338,7 +338,7 @@ export default function FarmerDashboard() {
   const handleDeleteProduct = async (productId: string) => {
     try {
       const response = await axios.delete(
-        `https://taja-haat-backend.vercel.app/products/${productId}`
+        `https://taja-haat-backend-muntakim.vercel.app/products/${productId}`
       );
       
       if (response.status === 200) {
@@ -364,7 +364,7 @@ export default function FarmerDashboard() {
       const newStatus = action === 'accept' ? 'shipped' : 'rejected';
       
       const response = await axios.put(
-        `https://taja-haat-backend.vercel.app/orders/${orderId}`,
+        `https://taja-haat-backend-muntakim.vercel.app/orders/${orderId}`,
         { status: newStatus }
       );
       

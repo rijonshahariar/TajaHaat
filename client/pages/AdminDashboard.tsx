@@ -115,7 +115,7 @@ export default function AdminDashboard() {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('https://taja-haat-backend.vercel.app/orders');
+      const response = await axios.get('https://taja-haat-backend-muntakim.vercel.app/orders');
       setOrders(response.data);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
 
       // Send the complete order data with updated status (excluding _id from body)
       const { _id, ...orderData } = orderToUpdate;
-      await axios.put(`https://taja-haat-backend.vercel.app/orders/${orderId}`, {
+      await axios.put(`https://taja-haat-backend-muntakim.vercel.app/orders/${orderId}`, {
         ...orderData,
         status: 'delivered'
       });
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
       }
 
       // Send required fields along with status update
-      await axios.put(`https://taja-haat-backend.vercel.app/orders/${orderId}`, {
+      await axios.put(`https://taja-haat-backend-muntakim.vercel.app/orders/${orderId}`, {
         productId: orderToUpdate.productId,
         productName: orderToUpdate.productName,
         quantity: orderToUpdate.quantity,
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
       }
 
       // Send required fields along with status update
-      await axios.put(`https://taja-haat-backend.vercel.app/orders/${orderId}`, {
+      await axios.put(`https://taja-haat-backend-muntakim.vercel.app/orders/${orderId}`, {
         productId: orderToUpdate.productId,
         productName: orderToUpdate.productName,
         quantity: orderToUpdate.quantity,

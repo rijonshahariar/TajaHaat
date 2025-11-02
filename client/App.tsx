@@ -14,6 +14,7 @@ import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
+import DriverDashboard from "./pages/DriverDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Bids from "./pages/Bids";
 import Forecast from "./pages/Forecast";
@@ -104,6 +105,14 @@ const App = () => (
             }
           />
           <Route
+            path="/driver-dashboard"
+            element={
+              <Layout>
+                <DriverDashboard />
+              </Layout>
+            }
+          />
+          <Route
             path="/admin-dashboard"
             element={
               <Layout>
@@ -160,10 +169,10 @@ const App = () => (
             }
           />
           <Route
-            path="/contact"
+            path="/forecast"
             element={
               <Layout>
-                <Contact />
+                <Forecast/>
               </Layout>
             }
           />

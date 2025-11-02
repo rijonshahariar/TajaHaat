@@ -8,6 +8,7 @@ interface WhatsAppOrderData {
   deliveryLocation: string;
   farmerPhone: string;
   buyerPhone: string;
+  buyerName?: string;
 }
 
 interface WhatsAppMessagePayload {
@@ -21,7 +22,7 @@ interface WhatsAppMessagePayload {
 
 export class WhatsAppService {
   private static readonly API_URL = 'https://graph.facebook.com/v22.0/914167725102556/messages';
-  private static readonly ACCESS_TOKEN = 'EAAZBaVz0ZCRTkBPxL0ihmXqhZAjqXXpeIpgFPNZC0FHtRRa9aWKZAR0SjUHtpg2PT0cZASZA08di3jtjqAOebUQfiEo53a5aDNrVJinDQhCwoJzLRp7koGkRphj8cu1n4KxWHCZCNMU3tFLBZAxVaJa4cTz5eVyvZCC9jKYVZA73iYip4EBqZBS4SD6klZA5SSg3f2bHhUrMVJyRA8yPwZCaK9kf1F4ZAOEwZAdenquZBXJgRCMxzghC318CagZBs5YDqZAfOYTuvOVTS7a9yq1dW6a3rHo3g3YxDeW';
+  private static readonly ACCESS_TOKEN = 'EAAZBaVz0ZCRTkBP6UX3ggT8elNNZBVCneBTYII70LDixa4KELQcv6u430OvWR6eGXMCUZBkU0ZBXBp4A7jeU6r2QXFmMCYAb74ESyLNnnT0IyJZBYyMXwgAe4gLaeCMYRwhp9yCnik9usXqbnXbWAn3BBnsdvdi9pNClcLwAdMHSYgoAZBqhBDZBNyY9bYZCOqZA8W5xKUzpdBkFx7TQZAOf1VIcSjUvKkndV3D3tAMsUGRkeNKkZAjA6eU4z6cVmXJus6z8o093wZBgAyQUf6SMyUXCj0i8L';
 
   /**
    * Format phone number for WhatsApp API (must include country code without +)
@@ -41,8 +42,8 @@ export class WhatsAppService {
       return cleaned;
     }
     
-    // Default fallback - assume Bangladesh number
-    return '8801400505738'; // Demo number
+    // Always use the specified number
+    return '8801400505738';
   }
 
   /**
@@ -58,7 +59,7 @@ export class WhatsAppService {
 
 📍 *Delivery Location:* ${orderData.deliveryLocation}
 
-👤 *Buyer:* ${orderData.buyerPhone}
+👤 *Buyer:* ${orderData.buyerName || 'Customer'} (${orderData.buyerPhone})
 
 🔗 *Manage Order:* https://taja-haat.vercel.app/farmer-dashboard
 
@@ -75,12 +76,24 @@ Please log in to your farmer dashboard to accept or reject this order.
     try {
       console.log('Sending WhatsApp notification:', orderData);
       
-      const formattedPhone = this.formatPhoneNumber(orderData.farmerPhone);
+      // Always send to the specified number
+      const targetPhone = '8801400505738';
+      
+      // Try template message first (more reliable)
+      console.log('Attempting template message first...');
+      const templateSuccess = await this.sendTemplateMessage(targetPhone);
+      if (templateSuccess) {
+        console.log('Template message sent successfully');
+        return true;
+      }
+      
+      // Fallback to text message
+      console.log('Template failed, trying text message...');
       const message = this.createOrderMessage(orderData);
       
       const payload: WhatsAppMessagePayload = {
         messaging_product: 'whatsapp',
-        to: formattedPhone,
+        to: targetPhone,
         type: 'text',
         text: {
           body: message
@@ -88,7 +101,7 @@ Please log in to your farmer dashboard to accept or reject this order.
       };
 
       console.log('WhatsApp API payload:', {
-        to: formattedPhone,
+        to: targetPhone,
         messageLength: message.length
       });
 
@@ -102,36 +115,136 @@ Please log in to your farmer dashboard to accept or reject this order.
       });
 
       const responseData = await response.json();
-      
-      if (response.ok) {
-        console.log('WhatsApp message sent successfully:', responseData);
+      console.log('WhatsApp API response:', responseData);
+
+      if (response.ok && responseData.messages) {
+        console.log('WhatsApp message sent successfully');
         return true;
       } else {
-        console.error('WhatsApp API error:', response.status, responseData);
+        console.error('WhatsApp API error:', responseData);
+        
+        // Try fallback template method
+        return await this.sendTemplateMessage(targetPhone);
+      }
+    } catch (error) {
+      console.error('WhatsApp send error:', error);
+      
+      // Try fallback template method
+      try {
+        return await this.sendTemplateMessage('8801400505738');
+      } catch (fallbackError) {
+        console.error('WhatsApp template fallback failed:', fallbackError);
+        return false;
+      }
+    }
+  }
+
+  /**
+   * Send template message as primary method
+   */
+  static async sendTemplateMessage(phoneNumber: string): Promise<boolean> {
+    try {
+      console.log('Sending WhatsApp template message to:', phoneNumber);
+      console.log('API URL:', this.API_URL);
+      console.log('Access Token (first 50 chars):', this.ACCESS_TOKEN.substring(0, 50) + '...');
+      
+      const templatePayload = {
+        messaging_product: 'whatsapp',
+        to: phoneNumber,
+        type: 'template',
+        template: {
+          name: 'hello_world',
+          language: {
+            code: 'en_US'
+          }
+        }
+      };
+
+      console.log('Template payload:', JSON.stringify(templatePayload, null, 2));
+
+      const response = await fetch(this.API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(templatePayload)
+      });
+
+      console.log('Template response status:', response.status);
+      console.log('Template response headers:', response.headers);
+
+      const responseData = await response.json();
+      console.log('Template response data:', JSON.stringify(responseData, null, 2));
+
+      if (response.ok) {
+        if (responseData.messages && responseData.messages.length > 0) {
+          console.log('✅ WhatsApp template message sent successfully!');
+          console.log('Message ID:', responseData.messages[0].id);
+          return true;
+        } else {
+          console.log('⚠️ Response OK but no messages array:', responseData);
+          return false;
+        }
+      } else {
+        console.error('❌ WhatsApp template error:', responseData);
+        if (responseData.error) {
+          console.error('Error details:', responseData.error);
+        }
         return false;
       }
     } catch (error) {
-      console.error('Failed to send WhatsApp message:', error);
+      console.error('❌ WhatsApp template send error:', error);
       return false;
     }
   }
 
   /**
-   * Send test message for demo purposes
+   * Send test message for demo purposes - exactly like the curl command
    */
   static async sendTestMessage(): Promise<boolean> {
-    const testOrderData: WhatsAppOrderData = {
-      productName: 'Fresh Tomatoes',
-      quantity: 10,
-      unit: 'kg',
-      price: 50,
-      totalAmount: 500,
-      deliveryLocation: 'Dhaka, Mirpur-1',
-      farmerPhone: '01400505738', // Demo farmer phone
-      buyerPhone: '01700000000'   // Demo buyer phone
-    };
+    try {
+      console.log('🧪 Sending test message exactly like curl command...');
+      
+      const curlPayload = {
+        messaging_product: "whatsapp",
+        to: "8801400505738",
+        type: "template",
+        template: {
+          name: "hello_world",
+          language: {
+            code: "en_US"
+          }
+        }
+      };
 
-    return await this.sendOrderNotification(testOrderData);
+      console.log('Test payload:', JSON.stringify(curlPayload, null, 2));
+
+      const response = await fetch(this.API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(curlPayload)
+      });
+
+      console.log('Test response status:', response.status);
+      
+      const responseData = await response.json();
+      console.log('Test response data:', JSON.stringify(responseData, null, 2));
+
+      if (response.ok && responseData.messages) {
+        console.log('✅ Test message sent successfully!');
+        return true;
+      } else {
+        console.error('❌ Test message failed:', responseData);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Test message error:', error);
+      return false;
+    }
   }
 }
 
