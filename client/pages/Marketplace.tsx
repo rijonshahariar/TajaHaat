@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Star } from "lucide-react";
+import { Search, Filter, Star, X } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { useTranslation } from "@/lib/i18n";
 
@@ -15,6 +15,19 @@ export default function Marketplace() {
   const [loading, setLoading] = useState(true);  
   const [error, setError] = useState(null);       
   const categories = [t('marketplace.category.all'), ...new Set(products.map((p) => p.category))];
+
+  // Filter products based on search term and selected category
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = selectedCategory === t('marketplace.category.all') || 
+                           product.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -56,8 +69,16 @@ export default function Marketplace() {
                   placeholder={t('marketplace.search_placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 py-2 rounded-lg"
+                  className="pl-10 pr-10 py-2 rounded-lg"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-3 w-5 h-5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -87,9 +108,27 @@ export default function Marketplace() {
         {/* Products Grid */}
         <section className="py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            {products.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-ag-green-600"></div>
+                <p className="mt-4 text-muted-foreground">Loading products...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-semibold text-red-600 mb-2">Error loading products</h3>
+                <p className="text-muted-foreground">{error}</p>
+              </div>
+            ) : filteredProducts.length > 0 ? (
+              <>
+                <div className="mb-6">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {filteredProducts.length} of {products.length} products
+                    {searchTerm && ` for "${searchTerm}"`}
+                    {selectedCategory !== t('marketplace.category.all') && ` in "${selectedCategory}"`}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredProducts.map((product) => (
                   <div
                     key={product._id}
                     className="bg-white rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer group"
@@ -161,11 +200,20 @@ export default function Marketplace() {
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+              </>
             ) : (
               <div className="text-center py-12">
-                <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filters</p>
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  {searchTerm || selectedCategory !== t('marketplace.category.all') 
+                    ? "No products found" 
+                    : "No products available"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {searchTerm || selectedCategory !== t('marketplace.category.all')
+                    ? "Try adjusting your search or filters"
+                    : "Check back later for new products"}
+                </p>
               </div>
             )}
           </div>
