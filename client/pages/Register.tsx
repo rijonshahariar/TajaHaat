@@ -247,11 +247,7 @@ export default function Register() {
                   </Button>
                   <h1 className="text-3xl font-bold text-foreground ml-2">{t('auth.verify_otp')}</h1>
                 </div>
-                
-                <p className="text-muted-foreground mb-8">
-                  Enter OTP for verification: {phoneNumber}<br/>
-                  <span className="text-ag-green-600 font-medium">Use: 123456 (Demo OTP)</span>
-                </p>
+              
 
                 <form onSubmit={handleCompleteRegistration} className="space-y-6">
                   <div>

@@ -30,7 +30,7 @@ export function Header() {
     { to: "/marketplace", label: t('nav.marketplace'), icon: Store },
     { to: "/dashboard", label: t('nav.dashboard'), icon: Package },
     ...(userData?.role === 'farmer' ? [{ to: "/bids", label: t('nav.bids'), icon: MessageSquare }] : []),
-    { to: "/forecast", label: t('nav.forecast'), icon: BarChart3 },
+    { to: "/pricing", label: t('nav.pricing'), icon: BarChart3 },
     { to: "/about", label: t('nav.about'), icon: Info },
     { to: "/contact", label: t('nav.contact'), icon: Phone },
   ];

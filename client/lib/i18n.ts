@@ -5,7 +5,7 @@ export const translations = {
   'nav.home': 'Home',
   'nav.marketplace': 'Marketplace',
   'nav.dashboard': 'Dashboard',
-  'nav.forecast': 'Forecast',
+  'nav.pricing': 'Pricing',
   'nav.about': 'About',
   'nav.contact': 'Contact',
   'nav.login': 'Login',

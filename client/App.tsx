@@ -17,6 +17,7 @@ import FarmerDashboard from "./pages/FarmerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Bids from "./pages/Bids";
 import Forecast from "./pages/Forecast";
+import Pricing from "./pages/Pricing";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -119,10 +120,10 @@ const App = () => (
             }
           />
           <Route
-            path="/forecast"
+            path="/pricing"
             element={
               <Layout>
-                <Forecast />
+                <Pricing />
               </Layout>
             }
           />
